@@ -364,6 +364,9 @@ NOT_GAMEPAD_RIGHT:
     adc d_y
     sta oam + (1 * 4) + 0
     cmp #0
+    bne NOT_HITTOP
+    lda #1
+    sta d_y
 NOT_GAMEPAD_UP:
     lda oam + (1 * 4) + 0
     cmp #210
