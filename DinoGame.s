@@ -310,9 +310,12 @@ textloop:
         beq :+
         jmp textloop
 :
-    lda #180
+    ;lda #31
+    lda #95
+    ;lda #159
+    ;lda #223
     sta oam
-    lda #120
+    lda #48
     sta oam + 3
     lda #1
     sta oam + 1
@@ -340,12 +343,22 @@ mainloop:
 
     jsr gamepad_poll
     lda gamepad
+<<<<<<< Updated upstream
     and #PAD_L
     beq NOT_GAMEPAD_LEFT
     lda oam + 3
+=======
+    and #PAD_U
+    ; Is left pressed?
+    beq NOT_GAMEPAD_UP
+    ; Yes, get the current y position of our sprite
+    lda oam
+    ; Is the y position 0?
+>>>>>>> Stashed changes
     cmp #0
-    beq NOT_GAMEPAD_LEFT
+    beq NOT_GAMEPAD_UP
     sec
+<<<<<<< Updated upstream
     sbc #1
     sta oam + 3
 NOT_GAMEPAD_LEFT:
@@ -353,12 +366,34 @@ NOT_GAMEPAD_LEFT:
     and #PAD_R
     beq NOT_GAMEPAD_RIGHT
     lda oam + 3
+=======
+    ; Subtract 1 from the y position
+    sbc #1
+    ; Set the new y position of our sprite
+    sta oam
+NOT_GAMEPAD_UP:
+    lda gamepad
+    and #PAD_D
+    beq NOT_GAMEPAD_DOWN
+    ; Get the current y position of our sprite
+    lda oam
+    ; Is the y position 248?
+>>>>>>> Stashed changes
     cmp #248
-    beq NOT_GAMEPAD_RIGHT
+    beq NOT_GAMEPAD_DOWN
     clc
+<<<<<<< Updated upstream
     adc #1
     sta oam + 3
 NOT_GAMEPAD_RIGHT:
+=======
+    ; Add 1 to the y position
+    adc #1
+    ; Set the new y position of our sprite
+    sta oam
+NOT_GAMEPAD_DOWN:
+    ; Get the y position of the bouncing sprite
+>>>>>>> Stashed changes
     lda oam + (1 * 4) + 0
     clc
     adc d_y
