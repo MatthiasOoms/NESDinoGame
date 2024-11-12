@@ -340,8 +340,6 @@ mainloop:
 
     jsr gamepad_poll
     lda gamepad
-    and #PAD_U
-    beq NOT_GAMEPAD_UP
     and #PAD_L
     beq NOT_GAMEPAD_LEFT
     lda oam + 3
@@ -366,9 +364,6 @@ NOT_GAMEPAD_RIGHT:
     adc d_y
     sta oam + (1 * 4) + 0
     cmp #0
-    bne NOT_GAMEPAD_UP
-    lda #1
-    sta d_y
 NOT_GAMEPAD_UP:
     lda oam + (1 * 4) + 0
     cmp #210
