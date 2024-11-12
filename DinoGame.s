@@ -338,60 +338,77 @@ mainloop:
     cmp #0
     bne mainloop
 
+    ; Gamepad state
     jsr gamepad_poll
     lda gamepad
     and #PAD_L
+    ; Is left pressed?
     beq NOT_GAMEPAD_LEFT
+    ; Yes, get the current x position of our sprite
     lda oam + 3
+    ; Is the x position 0?
     cmp #0
     beq NOT_GAMEPAD_LEFT
     sec
+    ; Subtract 1 from the x position
     sbc #1
+    ; Set the new x position of our sprite
     sta oam + 3
 NOT_GAMEPAD_LEFT:
     lda gamepad
     and #PAD_R
     beq NOT_GAMEPAD_RIGHT
+    ; Get the current y position of our sprite
     lda oam + 3
+    ; Is the x position 248?
     cmp #248
     beq NOT_GAMEPAD_RIGHT
     clc
+    ; Add 1 to the x position
     adc #1
+    ; Set the new x position of our sprite
     sta oam + 3
 NOT_GAMEPAD_RIGHT:
+    ; Get the y position of the bouncing sprite
     lda oam + (1 * 4) + 0
     clc
+    ; Add d_y to the y position
     adc d_y
+    ; Set the new y position of the bouncing sprite
     sta oam + (1 * 4) + 0
     cmp #0
+    ; Is the y position 0?
     bne NOT_HITTOP
+    ; Yes, set d_y to 1
+    ; AKA If sprite hits top of screen, move down
     lda #1
     sta d_y
-NOT_GAMEPAD_UP:
-    lda oam + (1 * 4) + 0
-    cmp #210
-    bne NOT_HITTOP
-    lda #$FF
-    sta d_y
 NOT_HITTOP:
+    ; Get the y position of the bouncing sprite
     lda oam + (1 * 4) + 0
     cmp #210
     bne NOT_HITBOTTOM
+    ; Set d_y to -1
     lda #$FF
     sta d_y
 NOT_HITBOTTOM:
+    ; Get the x position of the bouncing sprite
     lda oam + (1 * 4) + 3
     clc
     adc d_x
+    ; Set the new x position of the bouncing sprite
     sta oam + (1 * 4) + 3
     cmp #0
     bne NOT_HITLEFT
     lda #1
+    ; Set x direction to 1
     sta d_x
 NOT_HITLEFT:
+    ; Get the x position of the bouncing sprite
     lda oam + (1 * 4) + 3
     cmp #248
     bne NOT_HITRIGHT
+    ; Set x direction to -1
     lda #$FF
     sta d_x
 NOT_HITRIGHT:
