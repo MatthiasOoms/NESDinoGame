@@ -1,5 +1,6 @@
 # NESDinoGame
 This is a simple recreation of the DinoGame that plays when you have no internet connection in Google Chrome.
+This recreation is made for the Messen emulator using 6502 Assembler.
 
 ## Features
 - Horizontal sidescrolling scenery
@@ -13,3 +14,5 @@ This is a simple recreation of the DinoGame that plays when you have no internet
 - Playing sound
 - Saving the score to a file
 - Multiplayer (2 players)
+- Day-Night cycle
+- Paralaxing sky
