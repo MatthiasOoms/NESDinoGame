@@ -46,8 +46,16 @@ INES_SRAM = 0
 .segment "ZEROPAGE"
 nmi_ready: .res 1
 gamepad: .res 1
-d_x: .res 1
-d_y: .res 1
+
+p1_y: .res 1
+p2_y: .res 1
+p3_y: .res 1
+p4_y: .res 1
+
+p1_max_y: .res 1
+p2_max_y: .res 1
+p3_max_y: .res 1
+p4_max_y: .res 1
 
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
@@ -310,29 +318,78 @@ textloop:
         beq :+
         jmp textloop
 :
-    ;lda #31
-    lda #95
-    ;lda #159
-    ;lda #223
+    ; JUMP HEIGHTS
+    lda #39
+    sta p1_y
+    lda #103
+    sta p2_y
+    lda #167
+    sta p3_y
+    lda #230
+    sta p4_y
+
+    ; MAX JUMP HEIGHTS
+    lda #8
+    sta p1_max_y
+    lda #72
+    sta p2_max_y
+    lda #136
+    sta p3_max_y
+    lda #200
+    sta p4_max_y
+
+    ; Set the sprite attributes
+    lda p1_y
+    ; Set sprite y
     sta oam
-    lda #48
-    sta oam + 3
+    ; Set sprite tile
     lda #1
     sta oam + 1
+    ; Set sprite attributes
     lda #0
     sta oam + 2
-    lda #124
+    ; Set sprite x
+    lda #48
+    sta oam + 3
 
-    sta oam + (1 * 4)
-    sta oam + (1 * 4) + 3
-    lda #2
-    sta oam + (1 * 4) + 1
-    lda #0
-    sta oam + (1 * 4) + 2
-
+    lda p2_y
+    ; Set sprite y
+    sta oam + 4
+    ; Set sprite tile
     lda #1
-    sta d_x
-    sta d_y
+    sta oam + 4 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 4 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 4 + 3
+
+    lda p3_y
+    ; Set sprite y
+    sta oam + 8
+    ; Set sprite tile
+    lda #1
+    sta oam + 8 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 8 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 8 + 3
+
+    lda p4_y
+    ; Set sprite y
+    sta oam + 12
+    ; Set sprite tile
+    lda #1
+    sta oam + 12 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 12 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 12 + 3
 
     jsr ppu_update
 
@@ -343,30 +400,15 @@ mainloop:
 
     jsr gamepad_poll
     lda gamepad
-<<<<<<< Updated upstream
-    and #PAD_L
-    beq NOT_GAMEPAD_LEFT
-    lda oam + 3
-=======
     and #PAD_U
     ; Is left pressed?
     beq NOT_GAMEPAD_UP
     ; Yes, get the current y position of our sprite
     lda oam
     ; Is the y position 0?
->>>>>>> Stashed changes
-    cmp #0
+    cmp p1_max_y
     beq NOT_GAMEPAD_UP
     sec
-<<<<<<< Updated upstream
-    sbc #1
-    sta oam + 3
-NOT_GAMEPAD_LEFT:
-    lda gamepad
-    and #PAD_R
-    beq NOT_GAMEPAD_RIGHT
-    lda oam + 3
-=======
     ; Subtract 1 from the y position
     sbc #1
     ; Set the new y position of our sprite
@@ -374,59 +416,18 @@ NOT_GAMEPAD_LEFT:
 NOT_GAMEPAD_UP:
     lda gamepad
     and #PAD_D
-    beq NOT_GAMEPAD_DOWN
+    beq NOT_INPUT
     ; Get the current y position of our sprite
     lda oam
     ; Is the y position 248?
->>>>>>> Stashed changes
-    cmp #248
-    beq NOT_GAMEPAD_DOWN
+    cmp p1_y
+    beq NOT_INPUT
     clc
-<<<<<<< Updated upstream
-    adc #1
-    sta oam + 3
-NOT_GAMEPAD_RIGHT:
-=======
     ; Add 1 to the y position
     adc #1
     ; Set the new y position of our sprite
     sta oam
-NOT_GAMEPAD_DOWN:
-    ; Get the y position of the bouncing sprite
->>>>>>> Stashed changes
-    lda oam + (1 * 4) + 0
-    clc
-    adc d_y
-    sta oam + (1 * 4) + 0
-    cmp #0
-NOT_GAMEPAD_UP:
-    lda oam + (1 * 4) + 0
-    cmp #210
-    bne NOT_HITTOP
-    lda #$FF
-    sta d_y
-NOT_HITTOP:
-    lda oam + (1 * 4) + 0
-    cmp #210
-    bne NOT_HITBOTTOM
-    lda #$FF
-    sta d_y
-NOT_HITBOTTOM:
-    lda oam + (1 * 4) + 3
-    clc
-    adc d_x
-    sta oam + (1 * 4) + 3
-    cmp #0
-    bne NOT_HITLEFT
-    lda #1
-    sta d_x
-NOT_HITLEFT:
-    lda oam + (1 * 4) + 3
-    cmp #248
-    bne NOT_HITRIGHT
-    lda #$FF
-    sta d_x
-NOT_HITRIGHT:
+NOT_INPUT:
     lda #1
     sta nmi_ready
     jmp mainloop
