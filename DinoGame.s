@@ -46,8 +46,26 @@ INES_SRAM = 0
 .segment "ZEROPAGE"
 nmi_ready: .res 1
 gamepad: .res 1
-d_x: .res 1
-d_y: .res 1
+
+; Y position of the players
+p1_min_y: .res 1
+p2_min_y: .res 1
+p3_min_y: .res 1
+p4_min_y: .res 1
+
+; Max Y position of the players
+p1_max_y: .res 1
+p2_max_y: .res 1
+p3_max_y: .res 1
+p4_max_y: .res 1
+
+; Y velocity of the players ; $FF = not jumping/falling ; $01 = jumping
+p1_dy: .res 1
+p2_dy: .res 1
+p3_dy: .res 1
+p4_dy: .res 1
+
+jmp_speed: .res 1
 
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
@@ -310,26 +328,89 @@ textloop:
         beq :+
         jmp textloop
 :
-    lda #180
+    ; Set the jump speed
+    lda #2
+    sta jmp_speed
+
+    ; MIN JUMP HEIGHTS
+    lda #39
+    sta p1_min_y
+    lda #103
+    sta p2_min_y
+    lda #167
+    sta p3_min_y
+    lda #230
+    sta p4_min_y
+
+    ; JUMP VELOCITIES
+    lda #1
+    sta p1_dy
+    sta p2_dy
+    sta p3_dy
+    sta p4_dy
+
+    ; MAX JUMP HEIGHTS
+    lda #8
+    sta p1_max_y
+    lda #72
+    sta p2_max_y
+    lda #136
+    sta p3_max_y
+    lda #200
+    sta p4_max_y
+
+    ; Set the sprite attributes
+    lda p1_min_y
+    ; Set sprite y
     sta oam
-    lda #120
-    sta oam + 3
+    ; Set sprite tile
     lda #1
     sta oam + 1
+    ; Set sprite attributes
     lda #0
     sta oam + 2
-    lda #124
+    ; Set sprite x
+    lda #48
+    sta oam + 3
 
-    sta oam + (1 * 4)
-    sta oam + (1 * 4) + 3
-    lda #2
-    sta oam + (1 * 4) + 1
-    lda #0
-    sta oam + (1 * 4) + 2
-
+    lda p2_min_y
+    ; Set sprite y
+    sta oam + 4
+    ; Set sprite tile
     lda #1
-    sta d_x
-    sta d_y
+    sta oam + 4 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 4 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 4 + 3
+
+    lda p3_min_y
+    ; Set sprite y
+    sta oam + 8
+    ; Set sprite tile
+    lda #1
+    sta oam + 8 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 8 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 8 + 3
+
+    lda p4_min_y
+    ; Set sprite y
+    sta oam + 12
+    ; Set sprite tile
+    lda #1
+    sta oam + 12 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 12 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 12 + 3
 
     jsr ppu_update
 
@@ -341,77 +422,67 @@ mainloop:
     ; Gamepad state
     jsr gamepad_poll
     lda gamepad
-    and #PAD_L
-    ; Is left pressed?
-    beq NOT_GAMEPAD_LEFT
-    ; Yes, get the current x position of our sprite
-    lda oam + 3
-    ; Is the x position 0?
-    cmp #0
-    beq NOT_GAMEPAD_LEFT
-    sec
-    ; Subtract 1 from the x position
-    sbc #1
-    ; Set the new x position of our sprite
-    sta oam + 3
-NOT_GAMEPAD_LEFT:
+    and #PAD_U
+    ; Is up pressed?
+    beq NOT_GAMEPAD_UP
+    lda #$FF
+    sta p1_dy
+    
+NOT_GAMEPAD_UP:
     lda gamepad
-    and #PAD_R
-    beq NOT_GAMEPAD_RIGHT
-    ; Get the current y position of our sprite
-    lda oam + 3
-    ; Is the x position 248?
-    cmp #248
-    beq NOT_GAMEPAD_RIGHT
-    clc
-    ; Add 1 to the x position
-    adc #1
-    ; Set the new x position of our sprite
-    sta oam + 3
-NOT_GAMEPAD_RIGHT:
-    ; Get the y position of the bouncing sprite
-    lda oam + (1 * 4) + 0
-    clc
-    ; Add d_y to the y position
-    adc d_y
-    ; Set the new y position of the bouncing sprite
-    sta oam + (1 * 4) + 0
-    cmp #0
-    ; Is the y position 0?
-    bne NOT_HITTOP
-    ; Yes, set d_y to 1
-    ; AKA If sprite hits top of screen, move down
+    and #PAD_D
+    ; Is down pressed?
+    beq NOT_INPUT
     lda #1
-    sta d_y
-NOT_HITTOP:
-    ; Get the y position of the bouncing sprite
-    lda oam + (1 * 4) + 0
-    cmp #210
-    bne NOT_HITBOTTOM
-    ; Set d_y to -1
-    lda #$FF
-    sta d_y
-NOT_HITBOTTOM:
-    ; Get the x position of the bouncing sprite
-    lda oam + (1 * 4) + 3
+    sta p1_dy
+
+NOT_INPUT:
+    ; If dy is 1, add 1
+    ; If dy is 255, subtract 1
+    lda p1_dy
+    cmp #$FF
+    beq SUB
+    cmp #1
+    beq ADD
+    jmp CONTINUE
+
+ADD:
+    lda oam
+    ; Is the y position min?
+    cmp p1_min_y
+    ; If oam is at min or smaller, don't add
+    bcs FLIP_DY
+
+    ; Add 4 to the y position
+    lda oam
     clc
-    adc d_x
-    ; Set the new x position of the bouncing sprite
-    sta oam + (1 * 4) + 3
-    cmp #0
-    bne NOT_HITLEFT
+    adc jmp_speed
+    sta oam
+    jmp CONTINUE
+
+SUB:
+    lda oam
+    ; Is the y position max or bigger?
+    clc
+    cmp p1_max_y
+    ; If oam is at min, don't subtract
+    bcc FLIP_DY
+
+    ; Subtract 4 from the y position
+    lda oam
+    sec
+    sbc jmp_speed
+    sta oam
+    jmp CONTINUE
+
+FLIP_DY:
+    ; Flip the player direction
+    clc
     lda #1
-    ; Set x direction to 1
-    sta d_x
-NOT_HITLEFT:
-    ; Get the x position of the bouncing sprite
-    lda oam + (1 * 4) + 3
-    cmp #248
-    bne NOT_HITRIGHT
-    ; Set x direction to -1
-    lda #$FF
-    sta d_x
-NOT_HITRIGHT:
+    sta p1_dy
+    jmp CONTINUE
+
+CONTINUE:
     lda #1
     sta nmi_ready
     jmp mainloop
