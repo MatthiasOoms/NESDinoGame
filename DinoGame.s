@@ -47,15 +47,25 @@ INES_SRAM = 0
 nmi_ready: .res 1
 gamepad: .res 1
 
-p1_y: .res 1
-p2_y: .res 1
-p3_y: .res 1
-p4_y: .res 1
+; Y position of the players
+p1_min_y: .res 1
+p2_min_y: .res 1
+p3_min_y: .res 1
+p4_min_y: .res 1
 
+; Max Y position of the players
 p1_max_y: .res 1
 p2_max_y: .res 1
 p3_max_y: .res 1
 p4_max_y: .res 1
+
+; Y velocity of the players ; $FF = not jumping/falling ; $01 = jumping
+p1_dy: .res 1
+p2_dy: .res 1
+p3_dy: .res 1
+p4_dy: .res 1
+
+jmp_speed: .res 1
 
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
@@ -318,15 +328,26 @@ textloop:
         beq :+
         jmp textloop
 :
-    ; JUMP HEIGHTS
+    ; Set the jump speed
+    lda #2
+    sta jmp_speed
+
+    ; MIN JUMP HEIGHTS
     lda #39
-    sta p1_y
+    sta p1_min_y
     lda #103
-    sta p2_y
+    sta p2_min_y
     lda #167
-    sta p3_y
+    sta p3_min_y
     lda #230
-    sta p4_y
+    sta p4_min_y
+
+    ; JUMP VELOCITIES
+    lda #1
+    sta p1_dy
+    sta p2_dy
+    sta p3_dy
+    sta p4_dy
 
     ; MAX JUMP HEIGHTS
     lda #8
@@ -339,7 +360,7 @@ textloop:
     sta p4_max_y
 
     ; Set the sprite attributes
-    lda p1_y
+    lda p1_min_y
     ; Set sprite y
     sta oam
     ; Set sprite tile
@@ -352,7 +373,7 @@ textloop:
     lda #48
     sta oam + 3
 
-    lda p2_y
+    lda p2_min_y
     ; Set sprite y
     sta oam + 4
     ; Set sprite tile
@@ -365,7 +386,7 @@ textloop:
     lda #48
     sta oam + 4 + 3
 
-    lda p3_y
+    lda p3_min_y
     ; Set sprite y
     sta oam + 8
     ; Set sprite tile
@@ -378,7 +399,7 @@ textloop:
     lda #48
     sta oam + 8 + 3
 
-    lda p4_y
+    lda p4_min_y
     ; Set sprite y
     sta oam + 12
     ; Set sprite tile
@@ -401,33 +422,66 @@ mainloop:
     jsr gamepad_poll
     lda gamepad
     and #PAD_U
-    ; Is left pressed?
+    ; Is up pressed?
     beq NOT_GAMEPAD_UP
-    ; Yes, get the current y position of our sprite
-    lda oam
-    ; Is the y position 0?
-    cmp p1_max_y
-    beq NOT_GAMEPAD_UP
-    sec
-    ; Subtract 1 from the y position
-    sbc #1
-    ; Set the new y position of our sprite
-    sta oam
+    lda #$FF
+    sta p1_dy
+    
 NOT_GAMEPAD_UP:
     lda gamepad
     and #PAD_D
+    ; Is down pressed?
     beq NOT_INPUT
-    ; Get the current y position of our sprite
-    lda oam
-    ; Is the y position 248?
-    cmp p1_y
-    beq NOT_INPUT
-    clc
-    ; Add 1 to the y position
-    adc #1
-    ; Set the new y position of our sprite
-    sta oam
+    lda #1
+    sta p1_dy
+
 NOT_INPUT:
+    ; If dy is 1, add 1
+    ; If dy is 255, subtract 1
+    lda p1_dy
+    cmp #$FF
+    beq SUB
+    cmp #1
+    beq ADD
+    jmp CONTINUE
+
+ADD:
+    lda oam
+    ; Is the y position min?
+    cmp p1_min_y
+    ; If oam is at min or smaller, don't add
+    bcs FLIP_DY
+
+    ; Add 4 to the y position
+    lda oam
+    clc
+    adc jmp_speed
+    sta oam
+    jmp CONTINUE
+
+SUB:
+    lda oam
+    ; Is the y position max or bigger?
+    clc
+    cmp p1_max_y
+    ; If oam is at min, don't subtract
+    bcc FLIP_DY
+
+    ; Subtract 4 from the y position
+    lda oam
+    sec
+    sbc jmp_speed
+    sta oam
+    jmp CONTINUE
+
+FLIP_DY:
+    ; Flip the player direction
+    clc
+    lda #1
+    sta p1_dy
+    jmp CONTINUE
+
+CONTINUE:
     lda #1
     sta nmi_ready
     jmp mainloop
