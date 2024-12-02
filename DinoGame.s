@@ -87,8 +87,8 @@ default_palette:
 .byte $30,$00,$00,$00
 .byte $30,$00,$00,$00
 .byte $30,$00,$00,$00
-welcome_txt:
-.byte 'W','E','L','C', 'O', 'M', 'E', 72
+background_line:
+.byte 75, 75, 75, 75, 73, 75, 73, 73, 73, 78, 0
 
 ;*****************************************************************
 ; Import both the background and sprite character sets
@@ -204,7 +204,7 @@ cont_render:
     sta PPU_CONTROL
     lda PPU_STATUS
     lda #$3F
-    ldx #0
+    ldx #$00
     sta PPU_VRAM_ADDRESS2
     stx PPU_VRAM_ADDRESS2
     ldx #0
@@ -258,18 +258,19 @@ loop:
     lda #$00
     sta PPU_VRAM_ADDRESS2
     ;in current chr file 254 is a blank sprite
-    lda #254
+    lda #0
     ldy #30
 rowloop:
         ldx #32
-    columnloop:
+        columnloop:
             sta PPU_VRAM_IO
             dex
             bne columnloop
         dey
         bne rowloop
     
-    ldx #64
+ldx #64
+lda #$00
 loop:
         sta PPU_VRAM_IO
         dex
@@ -319,21 +320,25 @@ paletteloop:
         cpx #32
         bcc paletteloop
         
-        jsr ppu_off ; Wait for the screen to be drawn and then turn off drawing
         jsr clear_nametable
         lda PPU_STATUS
+
+
     lda #$20
     sta PPU_VRAM_ADDRESS2
-    lda #$10
+    lda p1_min_y
     sta PPU_VRAM_ADDRESS2
     ldx #0
-textloop:
-        lda welcome_txt, x
+
+horizonloop:
+        lda background_line, x
         sta PPU_VRAM_IO
         inx
         cmp #0
         beq :+
-        jmp textloop
+        jmp horizonloop
+
+
 :
     ; Set the jump speed
     lda #2
@@ -371,7 +376,7 @@ textloop:
     ; Set sprite y
     sta oam
     ; Set sprite tile
-    lda #4
+    lda #3
     sta oam + 1
     ; Set sprite attributes
     lda #0
@@ -384,7 +389,7 @@ textloop:
     ; Set sprite y
     sta oam + 4
     ; Set sprite tile
-    lda #4
+    lda #3
     sta oam + 4 + 1
     ; Set sprite attributes
     lda #0
@@ -397,7 +402,7 @@ textloop:
     ; Set sprite y
     sta oam + 8
     ; Set sprite tile
-    lda #4
+    lda #3
     sta oam + 8 + 1
     ; Set sprite attributes
     lda #0
@@ -410,7 +415,7 @@ textloop:
     ; Set sprite y
     sta oam + 12
     ; Set sprite tile
-    lda #4
+    lda #3
     sta oam + 12 + 1
     ; Set sprite attributes
     lda #0
