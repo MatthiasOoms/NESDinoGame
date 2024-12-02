@@ -79,16 +79,16 @@ oam: .res 256
 ;*****************************************************************
 .segment "RODATA"
 default_palette:
-.byte $0F,$15,$26,$37
-.byte $0F,$09,$19,$29
-.byte $0F,$01,$11,$21
-.byte $0F,$00,$10,$30
-.byte $0F,$18,$28,$38
-.byte $0F,$14,$24,$34
-.byte $0F,$1B,$2B,$3B
-.byte $0F,$12,$22,$32
+.byte $30,$00,$00,$00
+.byte $30,$00,$00,$00
+.byte $30,$00,$00,$00
+.byte $30,$00,$00,$00
+.byte $30,$00,$00,$00
+.byte $30,$00,$00,$00
+.byte $30,$00,$00,$00
+.byte $30,$00,$00,$00
 welcome_txt:
-.byte 'W','E','L','C', 'O', 'M', 'E', 0
+.byte 'W','E','L','C', 'O', 'M', 'E', 72
 
 ;*****************************************************************
 ; Import both the background and sprite character sets
@@ -182,15 +182,15 @@ wait_vblank2:
     ; Do we need to render
     lda nmi_ready
     bne :+
-    jmp ppu_update_end
+        jmp ppu_update_end
 :
     cmp #2
     bne cont_render
-    lda #%00000000
-    sta PPU_MASK
-    ldx #0
-    stx nmi_ready
-    jmp ppu_update_end
+        lda #%00000000
+        sta PPU_MASK
+        ldx #0
+        stx nmi_ready
+        jmp ppu_update_end
 
 cont_render:
     ;Transfers sprite OAM data using DMA
@@ -204,6 +204,7 @@ cont_render:
     sta PPU_CONTROL
     lda PPU_STATUS
     lda #$3F
+    ldx #0
     sta PPU_VRAM_ADDRESS2
     stx PPU_VRAM_ADDRESS2
     ldx #0
@@ -214,9 +215,9 @@ loop:
         cpx #32
         bcc loop
         lda #%00011110
-    sta PPU_MASK
-    ldx #0
-    stx nmi_ready
+        sta PPU_MASK
+        ldx #0
+        stx nmi_ready
 ppu_update_end:
     pla
     tay
@@ -234,7 +235,7 @@ ppu_update_end:
 loop:
         lda nmi_ready
         bne loop
-        rts
+    rts
 .endproc
 
 .segment "CODE"
@@ -256,22 +257,26 @@ loop:
     sta PPU_VRAM_ADDRESS2
     lda #$00
     sta PPU_VRAM_ADDRESS2
-    lda #0
+    ;in current chr file 254 is a blank sprite
+    lda #254
     ldy #30
 rowloop:
         ldx #32
-columnloop:
-        sta PPU_VRAM_IO
-        dex
-        bne columnloop
+    columnloop:
+            sta PPU_VRAM_IO
+            dex
+            bne columnloop
         dey
         bne rowloop
-        ldx #64
+    
+    ldx #64
 loop:
         sta PPU_VRAM_IO
         dex
         bne loop
-        rts
+        
+        
+rts
 .endproc
 
 ;***************************************************************
@@ -313,11 +318,13 @@ paletteloop:
         inx
         cpx #32
         bcc paletteloop
+        
+        jsr ppu_off ; Wait for the screen to be drawn and then turn off drawing
         jsr clear_nametable
         lda PPU_STATUS
     lda #$20
     sta PPU_VRAM_ADDRESS2
-    lda #$8A
+    lda #$10
     sta PPU_VRAM_ADDRESS2
     ldx #0
 textloop:
@@ -364,7 +371,7 @@ textloop:
     ; Set sprite y
     sta oam
     ; Set sprite tile
-    lda #1
+    lda #4
     sta oam + 1
     ; Set sprite attributes
     lda #0
@@ -377,7 +384,7 @@ textloop:
     ; Set sprite y
     sta oam + 4
     ; Set sprite tile
-    lda #1
+    lda #4
     sta oam + 4 + 1
     ; Set sprite attributes
     lda #0
@@ -390,7 +397,7 @@ textloop:
     ; Set sprite y
     sta oam + 8
     ; Set sprite tile
-    lda #1
+    lda #4
     sta oam + 8 + 1
     ; Set sprite attributes
     lda #0
@@ -403,7 +410,7 @@ textloop:
     ; Set sprite y
     sta oam + 12
     ; Set sprite tile
-    lda #1
+    lda #4
     sta oam + 12 + 1
     ; Set sprite attributes
     lda #0
