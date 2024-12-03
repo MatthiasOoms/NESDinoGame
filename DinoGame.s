@@ -363,15 +363,35 @@ textloop:
     lda p1_min_y
     ; Set sprite y
     sta oam
+    sta oam+16
+    lda #31
+    sta oam+20
+    sta oam+24
     ; Set sprite tile
-    lda #1
-    sta oam + 1
+    ; lda #1
+    ; sta oam + 1
+    ldx #1
+    stx oam+1
+    inx
+    stx oam+17
+    inx
+    stx oam+21
+    inx
+    stx oam+25
+
     ; Set sprite attributes
     lda #0
     sta oam + 2
+    sta oam + 18
+    sta oam + 22
+    sta oam + 26
     ; Set sprite x
     lda #48
     sta oam + 3
+    sta oam + 23
+    lda #56
+    sta oam + 19
+    sta oam + 27
 
     lda p2_min_y
     ; Set sprite y
@@ -441,7 +461,11 @@ GAMEPAD_UP:
     sta p1_dy
 
 GAMEPAD_DOWN:
-    jmp NOT_INPUT
+    lda gamepad
+    and #PAD_L
+    beq NOT_INPUT
+    lda #1
+    sta p1_dy
 
 NOT_INPUT:
     ; If dy is 1, add 1 = move down
@@ -465,6 +489,19 @@ MOVE_DOWN:
     clc
     adc jmp_speed
     sta oam
+    ; other 3 tiles
+    lda oam+16
+    clc
+    adc jmp_speed
+    sta oam+16
+    lda oam+20
+    clc
+    adc jmp_speed
+    sta oam+20
+    lda oam+24
+    clc
+    adc jmp_speed
+    sta oam+24
     jmp CONTINUE
 
 MOVE_UP:
@@ -480,6 +517,19 @@ MOVE_UP:
     sec
     sbc jmp_speed
     sta oam
+    ; other 3 tiles
+    lda oam+16
+    sec
+    sbc jmp_speed
+    sta oam+16
+    lda oam+20
+    sec
+    sbc jmp_speed
+    sta oam+20
+    lda oam+24
+    sec
+    sbc jmp_speed
+    sta oam+24
     jmp CONTINUE
 
 FLIP_DY:
