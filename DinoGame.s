@@ -59,7 +59,7 @@ p2_max_y: .res 1
 p3_max_y: .res 1
 p4_max_y: .res 1
 
-; Y velocity of the players ; $FF = not jumping/falling ; $01 = jumping
+; Y velocity of the players ; $FF = jumping ; $01 = falling/not jumping
 p1_dy: .res 1
 p2_dy: .res 1
 p3_dy: .res 1
@@ -419,33 +419,41 @@ mainloop:
     cmp #0
     bne mainloop
 
+    ; Only allow input if the player is on the ground
+    lda oam
+    cmp p1_min_y
+    bcc NOT_INPUT
+
     jsr gamepad_poll
     lda gamepad
     and #PAD_U
     ; Is up pressed?
-    beq NOT_GAMEPAD_UP
+    beq GAMEPAD_UP
     lda #$FF
     sta p1_dy
     
-NOT_GAMEPAD_UP:
+GAMEPAD_UP:
     lda gamepad
     and #PAD_D
     ; Is down pressed?
-    beq NOT_INPUT
+    beq GAMEPAD_DOWN
     lda #1
     sta p1_dy
 
+GAMEPAD_DOWN:
+    jmp NOT_INPUT
+
 NOT_INPUT:
-    ; If dy is 1, add 1
-    ; If dy is 255, subtract 1
+    ; If dy is 1, add 1 = move down
+    ; If dy is 255, subtract 1 = move up
     lda p1_dy
     cmp #$FF
-    beq SUB
+    beq MOVE_UP
     cmp #1
-    beq ADD
+    beq MOVE_DOWN
     jmp CONTINUE
 
-ADD:
+MOVE_DOWN:
     lda oam
     ; Is the y position min?
     cmp p1_min_y
@@ -459,12 +467,12 @@ ADD:
     sta oam
     jmp CONTINUE
 
-SUB:
+MOVE_UP:
     lda oam
     ; Is the y position max or bigger?
     clc
     cmp p1_max_y
-    ; If oam is at min, don't subtract
+    ; If oam is at max, don't subtract
     bcc FLIP_DY
 
     ; Subtract 4 from the y position
