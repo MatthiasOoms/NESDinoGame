@@ -58,6 +58,7 @@ jmp_speed: .res 1
 
 ; x coordinate of camera
 camera_x: .res 1
+current_nametable: .res 1
 
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
@@ -86,8 +87,11 @@ default_palette:
 .byte $30,$00,$00,$00
 
 
-horizon_line:
+horizon_line_one:
 .byte 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75
+
+horizon_line_two:
+.byte 75, 75, 75, 75, 75, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75
 
 ;*****************************************************************
 ; Import both the background and sprite character sets
@@ -187,6 +191,7 @@ rti
         jmp ppu_update_end
 
     :
+    
         cmp #2
 
         bne cont_render
@@ -223,6 +228,9 @@ rti
             ldx #0
             stx nmi_ready
     ppu_update_end:
+
+        jsr horizontal_scrollling
+
         pla
         tay
         pla
@@ -237,11 +245,13 @@ rti
 .segment "CODE"
 .proc horizontal_scrollling
 
+
     ; reset address latch
          lda PPU_STATUS
 
          ; Set the high bit of X and Y scroll.
          lda ppu_ctl0
+         ora current_nametable
          sta PPU_CONTROL
 
          ; Set the low 8 bits of X and Y scroll.
@@ -255,7 +265,27 @@ rti
          inx
          stx camera_x
 
-        
+    	
+         cpx 255
+         bne ending
+
+         ldx 0
+         stx camera_x
+
+         ldx current_nametable
+         cpx #$00
+         bne firsttable
+            ldx #$01
+            stx current_nametable
+            jmp ending
+
+        firsttable:
+            ldx #$00
+            stx current_nametable
+            jmp ending
+
+
+        ending:
 
 
     rts
@@ -264,10 +294,10 @@ rti
 
 
 ;***************************************************************
-; draw horizon line - a and x need to have the address info
+; draw horizon line
 ;***************************************************************
 .segment "CODE"
-.proc draw_horizon
+.proc draw_horizon_one
 
     ;reset address latch
     lda PPU_STATUS
@@ -275,7 +305,27 @@ rti
     ;iterate over the horizon line
     ldx #0
     loop:
-        lda horizon_line, x
+        lda horizon_line_one, x
+        sta PPU_VRAM_IO
+        inx
+        cpx #32
+        beq :+ 
+        jmp loop
+
+    :
+    rts
+.endproc
+
+.segment "CODE"
+.proc draw_horizon_two
+
+    ;reset address latch
+    lda PPU_STATUS
+
+    ;iterate over the horizon line
+    ldx #0
+    loop:
+        lda horizon_line_two, x
         sta PPU_VRAM_IO
         inx
         cpx #32
@@ -293,17 +343,17 @@ rti
 .segment "CODE"
 .proc display_game_screen
 
-    vram_set_address (NAME_TABLE_0_ADDRESS+ 6 * 32)
-    jsr draw_horizon
+    vram_set_address (NAME_TABLE_0_ADDRESS + 13 * 32)
+    jsr draw_horizon_one
 
-    vram_set_address (NAME_TABLE_0_ADDRESS + 12 * 32)
-    jsr draw_horizon
+    vram_set_address (NAME_TABLE_0_ADDRESS + 28 * 32)
+    jsr draw_horizon_one
 
-    vram_set_address (NAME_TABLE_1_ADDRESS+ 6 * 32)
-    jsr draw_horizon
+    vram_set_address (NAME_TABLE_1_ADDRESS + 13 * 32)
+    jsr draw_horizon_two
 
-    vram_set_address (NAME_TABLE_1_ADDRESS + 12 * 32)
-    jsr draw_horizon
+    vram_set_address (NAME_TABLE_1_ADDRESS + 28 * 32)
+    jsr draw_horizon_two
 
 
 
@@ -598,10 +648,13 @@ rti
     sta oam + 60 + 3
     ;P2__________________________________________________________
 
-; set initial x scroll value as zero
+    ; set initial x scroll value as zero
     ldx #0
-    sta camera_x
+    stx camera_x
+    ldx #$00
+    stx current_nametable
 
+    
 
     rts
 .endproc
@@ -712,8 +765,6 @@ FLIP_DY:
 CONTINUE:
     lda #1
     sta nmi_ready
-
-    jsr horizontal_scrollling
 
     jmp mainloop
 
