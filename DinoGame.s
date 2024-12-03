@@ -1,13 +1,3 @@
-; Define PPU Registers
-PPU_CONTROL = $2000
-PPU_MASK = $2001
-PPU_STATUS = $2002
-PPU_SPRRAM_ADDRESS = $2003
-PPU_SPRRAM_IO = $2004
-PPU_VRAM_ADDRESS1 = $2005
-PPU_VRAM_ADDRESS2 = $2006
-PPU_VRAM_IO = $2007
-SPRITE_DMA = $4014
 ; Define APU Registers
 APU_DM_CONTROL = $4010
 APU_CLOCK = $4015
@@ -26,7 +16,7 @@ PAD_R = $80
 
 .segment "HEADER"
 INES_MAPPER = 0
-INES_MIRROR = 0
+INES_MIRROR = 1
 INES_SRAM = 0
 .byte 'N', 'E', 'S', $1A ; ID
 .byte $02
@@ -44,7 +34,6 @@ INES_SRAM = 0
 ; 6502 Zero Page Memory (256 bytes)
 ;*****************************************************************
 .segment "ZEROPAGE"
-nmi_ready: .res 1
 gamepad: .res 1
 
 ; Y position of the players
@@ -67,6 +56,10 @@ p4_dy: .res 1
 
 jmp_speed: .res 1
 
+; x coordinate of camera
+camera_x: .res 1
+current_nametable: .res 1
+
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
 ;*****************************************************************
@@ -74,21 +67,31 @@ jmp_speed: .res 1
 oam: .res 256
 
 ;*****************************************************************
+; Include NES Function Library
+;*****************************************************************
+.include "neslib.s"
+
+;*****************************************************************
 ; Our default palette table has 16 entries for tiles
 ; and 16 entries for sprites
 ;*****************************************************************
 .segment "RODATA"
 default_palette:
-.byte $0F,$15,$26,$37
-.byte $0F,$09,$19,$29
-.byte $0F,$01,$11,$21
-.byte $0F,$00,$10,$30
-.byte $0F,$18,$28,$38
-.byte $0F,$14,$24,$34
-.byte $0F,$1B,$2B,$3B
-.byte $0F,$12,$22,$32
-welcome_txt:
-.byte 'W','E','L','C', 'O', 'M', 'E', 0
+.byte $30,$00,$00,$00
+.byte $30,$00,$00,$00
+.byte $30,$00,$00,$00
+.byte $30,$00,$00,$00
+.byte $30,$00,$00,$00
+.byte $30,$00,$00,$00
+.byte $30,$00,$00,$00
+.byte $30,$00,$00,$00
+
+
+horizon_line_one:
+.byte 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75
+
+horizon_line_two:
+.byte 75, 75, 75, 75, 75, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75
 
 ;*****************************************************************
 ; Import both the background and sprite character sets
@@ -129,45 +132,46 @@ rti
 
     ; Wait for vblank
     bit PPU_STATUS
-wait_vblank:
-    bit PPU_STATUS
-    bpl wait_vblank
 
-    ; Clear RAM
-    lda #0
-    ldx #0
-clear_ram:
-    sta $0000,x
-    sta $0100,x
-    sta $0200,x
-    sta $0300,x
-    sta $0400,x
-    sta $0500,x
-    sta $0600,x
-    sta $0700,x
-    inx
-    bne clear_ram
+    wait_vblank:
+        bit PPU_STATUS
+        bpl wait_vblank 
 
-    ; Position the sprites offscreen
-    lda #255
-    ldx #0
-    clear_oam:
-    sta oam,x
-    inx
-    inx
-    inx
-    inx
-    bne clear_oam
+        ; Clear RAM
+        lda #0
+        ldx #0
+    clear_ram:
+        sta $0000,x
+        sta $0100,x
+        sta $0200,x
+        sta $0300,x
+        sta $0400,x
+        sta $0500,x
+        sta $0600,x
+        sta $0700,x
+        inx
+        bne clear_ram   
 
-    ; Wait for the second vblank
-wait_vblank2:
-    bit PPU_STATUS
-    bpl wait_vblank2
+        ; Position the sprites offscreen
+        lda #255
+        ldx #0
+        clear_oam:
+        sta oam,x
+        inx
+        inx
+        inx
+        inx
+        bne clear_oam   
 
-    ; enable the NMI for graphical and jump to our main program updates
-    lda #%10001000
-    sta PPU_CONTROL
-    jmp main
+        ; Wait for the second vblank
+    wait_vblank2:
+        bit PPU_STATUS
+        bpl wait_vblank2    
+
+        ; enable the NMI for graphical and jump to our main program updates
+        lda #%10001000
+        sta PPU_CONTROL
+        jmp main
 .endproc
 
 .segment "CODE"
@@ -179,100 +183,183 @@ wait_vblank2:
     tya
     pha
 
+    
+
     ; Do we need to render
     lda nmi_ready
     bne :+
-    jmp ppu_update_end
-:
-    cmp #2
-    bne cont_render
-    lda #%00000000
-    sta PPU_MASK
-    ldx #0
-    stx nmi_ready
-    jmp ppu_update_end
+        jmp ppu_update_end
 
-cont_render:
-    ;Transfers sprite OAM data using DMA
-    ldx #0
-    stx PPU_SPRRAM_ADDRESS
-    lda #>oam
-    sta SPRITE_DMA
+    :
+    
+        cmp #2
 
-    ; Transfers the current palette to PPU
-    lda #%10001000
-    sta PPU_CONTROL
+        bne cont_render
+        lda #%00000000
+        sta PPU_MASK
+        ldx #0
+        stx nmi_ready
+        jmp ppu_update_end
+
+    cont_render:
+
+        ;Transfers sprite OAM data using DMA
+        ldx #0
+        stx PPU_SPRRAM_ADDRESS
+        lda #>oam
+        sta SPRITE_DMA  
+
+        ; Transfers the current palette to PPU
+        lda #%10001000
+        sta PPU_CONTROL
+        lda PPU_STATUS
+
+        vram_set_address ($3F00)
+
+        ldx #0
+    loop:
+            lda palette, x
+            sta PPU_VRAM_IO
+            inx
+            cpx #32
+            bcc loop
+            lda #%00011110
+            sta PPU_MASK
+            ldx #0
+            stx nmi_ready
+    ppu_update_end:
+
+        jsr horizontal_scrollling
+
+        pla
+        tay
+        pla
+        tax
+        pla
+        rti
+.endproc
+
+;***************************************************************
+; scroll background horizontally
+;***************************************************************
+.segment "CODE"
+.proc horizontal_scrollling
+
+
+    ; reset address latch
+         lda PPU_STATUS
+
+         ; Set the high bit of X and Y scroll.
+         lda ppu_ctl0
+         ora current_nametable
+         sta PPU_CONTROL
+
+         ; Set the low 8 bits of X and Y scroll.
+         lda PPU_STATUS
+         lda camera_x
+         sta PPU_VRAM_ADDRESS1
+         lda #00
+         sta PPU_VRAM_ADDRESS1
+
+         ldx camera_x
+         inx
+         stx camera_x
+
+    	
+         cpx 255
+         bne ending
+
+         ldx 0
+         stx camera_x
+
+         ldx current_nametable
+         cpx #$00
+         bne firsttable
+            ldx #$01
+            stx current_nametable
+            jmp ending
+
+        firsttable:
+            ldx #$00
+            stx current_nametable
+            jmp ending
+
+
+        ending:
+
+
+    rts
+.endproc
+
+
+
+;***************************************************************
+; draw horizon line
+;***************************************************************
+.segment "CODE"
+.proc draw_horizon_one
+
+    ;reset address latch
     lda PPU_STATUS
-    lda #$3F
-    sta PPU_VRAM_ADDRESS2
-    stx PPU_VRAM_ADDRESS2
+
+    ;iterate over the horizon line
     ldx #0
-loop:
-        lda palette, x
+    loop:
+        lda horizon_line_one, x
         sta PPU_VRAM_IO
         inx
         cpx #32
-        bcc loop
-        lda #%00011110
-    sta PPU_MASK
-    ldx #0
-    stx nmi_ready
-ppu_update_end:
-    pla
-    tay
-    pla
-    tax
-    pla
-    rti
+        beq :+ 
+        jmp loop
+
+    :
+    rts
 .endproc
 
 .segment "CODE"
-; ppu_update: waits until next NMI and turns rendering on (if not already)
-.proc ppu_update
-    lda #1
-    sta nmi_ready
-loop:
-        lda nmi_ready
-        bne loop
-        rts
-.endproc
+.proc draw_horizon_two
 
-.segment "CODE"
-; ppu_off: waits until next NMI and turns rendering off
-; (now safe to write PPU directly via PPU_VRAM_IO)
-.proc ppu_off
-    lda #2
-    sta nmi_ready
-loop:
-        lda nmi_ready
-        bne loop
-        rts
-.endproc
-
-.segment "CODE"
-.proc clear_nametable
+    ;reset address latch
     lda PPU_STATUS
-    lda #$20
-    sta PPU_VRAM_ADDRESS2
-    lda #$00
-    sta PPU_VRAM_ADDRESS2
-    lda #0
-    ldy #30
-rowloop:
-        ldx #32
-columnloop:
+
+    ;iterate over the horizon line
+    ldx #0
+    loop:
+        lda horizon_line_two, x
         sta PPU_VRAM_IO
-        dex
-        bne columnloop
-        dey
-        bne rowloop
-        ldx #64
-loop:
-        sta PPU_VRAM_IO
-        dex
-        bne loop
-        rts
+        inx
+        cpx #32
+        beq :+ 
+        jmp loop
+
+    :
+    rts
 .endproc
+
+
+;***************************************************************
+; display game screen
+;***************************************************************
+.segment "CODE"
+.proc display_game_screen
+
+    vram_set_address (NAME_TABLE_0_ADDRESS + 13 * 32)
+    jsr draw_horizon_one
+
+    vram_set_address (NAME_TABLE_0_ADDRESS + 28 * 32)
+    jsr draw_horizon_one
+
+    vram_set_address (NAME_TABLE_1_ADDRESS + 13 * 32)
+    jsr draw_horizon_two
+
+    vram_set_address (NAME_TABLE_1_ADDRESS + 28 * 32)
+    jsr draw_horizon_two
+
+
+
+
+.endproc
+
 
 ;***************************************************************
 ; gamepad_poll: this reads the gamepad state into the variable
@@ -288,7 +375,7 @@ loop:
     lda #0
     sta JOYPAD1
     ldx #8
-loop:
+    loop:
         pha
         lda JOYPAD1
         and #%00000011
@@ -301,33 +388,12 @@ loop:
     rts
 .endproc
 
-;**************************************************************
-; Main application logic section includes the game loop
-;**************************************************************
+
+;***************************************************************
+; init_variables: initialises various values in zero page memory
+;***************************************************************
 .segment "CODE"
-.proc main
-    ldx #0
-paletteloop:
-        lda default_palette, x
-        sta palette, x
-        inx
-        cpx #32
-        bcc paletteloop
-        jsr clear_nametable
-        lda PPU_STATUS
-    lda #$20
-    sta PPU_VRAM_ADDRESS2
-    lda #$8A
-    sta PPU_VRAM_ADDRESS2
-    ldx #0
-textloop:
-        lda welcome_txt, x
-        sta PPU_VRAM_IO
-        inx
-        cmp #0
-        beq :+
-        jmp textloop
-:
+.proc init_variables
     ; Set the jump speed
     lda #3
     sta jmp_speed
@@ -355,7 +421,7 @@ textloop:
     ; Set sprite y
     sta oam
     ; Set sprite tile
-    lda #1
+    lda #51
     sta oam + 1
     ; Set sprite attributes
     lda #0
@@ -368,10 +434,10 @@ textloop:
     ; Set sprite y
     sta oam + 4
     ; Set sprite tile
-    lda #1
+    lda #51
     sta oam + 4 + 1
     ; Set sprite attributes
-    lda #0
+    lda #$00000011
     sta oam + 4 + 2
     ; Set sprite x
     lda #56
@@ -383,7 +449,7 @@ textloop:
     ; Set sprite y
     sta oam + 8
     ; Set sprite tile
-    lda #1
+    lda #51
     sta oam + 8 + 1
     ; Set sprite attributes
     lda #0
@@ -398,7 +464,7 @@ textloop:
     ; Set sprite y
     sta oam + 12
     ; Set sprite tile
-    lda #1
+    lda #51
     sta oam + 12 + 1
     ; Set sprite attributes
     lda #0
@@ -668,9 +734,46 @@ textloop:
     sta oam + 84 + 3
     ;P2__________________________________________________________
 
-    jsr ppu_update
+    ; set initial x scroll value as zero
+    ldx #0
+    stx camera_x
+    ldx #$00
+    stx current_nametable
+
+    
+
+    rts
+.endproc
+
+
+;**************************************************************
+; Main application logic section includes the game loop
+;**************************************************************
+.segment "CODE"
+.proc main
+
+ldx #0
+paletteloop:
+            lda default_palette, x
+            sta palette, x
+            inx
+            cpx #32
+            bcc paletteloop
+
+            jsr clear_nametable
+            lda PPU_STATUS
+
+
+
+jsr init_variables
+
+jsr display_game_screen
+
+jsr ppu_update
+
 
 mainloop:
+
     lda nmi_ready
     cmp #0
     bne mainloop
@@ -828,5 +931,8 @@ MOVE_UP:
 CONTINUE:
     lda #1
     sta nmi_ready
+
     jmp mainloop
+
+
 .endproc
