@@ -350,6 +350,7 @@ textloop:
     sta p2_max_y
 
     ; Set the sprite attributes
+    ; P1__________________________________________________________
     lda p1_min_y
     ; Set sprite y
     sta oam
@@ -363,7 +364,7 @@ textloop:
     lda #48
     sta oam + 3
 
-    lda p2_min_y
+    lda p1_min_y
     ; Set sprite y
     sta oam + 4
     ; Set sprite tile
@@ -373,8 +374,213 @@ textloop:
     lda #0
     sta oam + 4 + 2
     ; Set sprite x
-    lda #48
+    lda #56
     sta oam + 4 + 3
+
+    lda p1_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 8
+    ; Set sprite tile
+    lda #1
+    sta oam + 8 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 8 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 8 + 3
+
+    lda p1_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 12
+    ; Set sprite tile
+    lda #1
+    sta oam + 12 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 12 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 12 + 3
+
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 16
+    ; Set sprite tile
+    lda #1
+    sta oam + 16 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 16 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 16 + 3
+
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 20
+    ; Set sprite tile
+    lda #1
+    sta oam + 20 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 20 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 20 + 3
+
+    lda p1_min_y
+    ; Set sprite y
+    sta oam + 24
+    ; Set sprite tile
+    lda #1
+    sta oam + 24 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 24 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 24 + 3
+
+    lda p1_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 28
+    ; Set sprite tile
+    lda #1
+    sta oam + 28 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 28 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 28 + 3
+    ;P1__________________________________________________________
+
+    ; P2__________________________________________________________
+    lda p2_min_y
+    ; Set sprite y
+    sta oam + 32
+    ; Set sprite tile
+    lda #1
+    sta oam + 32 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 32 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 32 + 3
+
+    lda p2_min_y
+    ; Set sprite y
+    sta oam + 36
+    ; Set sprite tile
+    lda #1
+    sta oam + 36 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 36 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 36 + 3
+
+    lda p2_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 40
+    ; Set sprite tile
+    lda #1
+    sta oam + 40 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 40 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 40 + 3
+
+    lda p2_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 44
+    ; Set sprite tile
+    lda #1
+    sta oam + 44 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 44 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 44 + 3
+
+    lda p2_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 48
+    ; Set sprite tile
+    lda #1
+    sta oam + 48 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 48 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 48 + 3
+
+    lda p2_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 52
+    ; Set sprite tile
+    lda #1
+    sta oam + 52 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 52 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 52 + 3
+
+    lda p2_min_y
+    ; Set sprite y
+    sta oam + 56
+    ; Set sprite tile
+    lda #1
+    sta oam + 56 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 56 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 56 + 3
+
+    lda p2_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 60
+    ; Set sprite tile
+    lda #1
+    sta oam + 60 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 60 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 60 + 3
+    ;P2__________________________________________________________
 
     jsr ppu_update
 
