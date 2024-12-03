@@ -39,20 +39,14 @@ gamepad: .res 1
 ; Y position of the players
 p1_min_y: .res 1
 p2_min_y: .res 1
-p3_min_y: .res 1
-p4_min_y: .res 1
 
 ; Max Y position of the players
 p1_max_y: .res 1
 p2_max_y: .res 1
-p3_max_y: .res 1
-p4_max_y: .res 1
 
 ; Y velocity of the players ; $FF = jumping ; $01 = falling/not jumping
 p1_dy: .res 1
 p2_dy: .res 1
-p3_dy: .res 1
-p4_dy: .res 1
 
 jmp_speed: .res 1
 
@@ -182,8 +176,6 @@ rti
     pha
     tya
     pha
-
-    
 
     ; Do we need to render
     lda nmi_ready
@@ -343,13 +335,13 @@ rti
 .segment "CODE"
 .proc display_game_screen
 
-    vram_set_address (NAME_TABLE_0_ADDRESS + 13 * 32)
+    vram_set_address (NAME_TABLE_0_ADDRESS + 12 * 32)
     jsr draw_horizon_one
 
     vram_set_address (NAME_TABLE_0_ADDRESS + 28 * 32)
     jsr draw_horizon_one
 
-    vram_set_address (NAME_TABLE_1_ADDRESS + 13 * 32)
+    vram_set_address (NAME_TABLE_1_ADDRESS + 12 * 32)
     jsr draw_horizon_two
 
     vram_set_address (NAME_TABLE_1_ADDRESS + 28 * 32)
@@ -399,9 +391,9 @@ rti
     sta jmp_speed
 
     ; MIN JUMP HEIGHTS
-    lda #96
+    lda #100
     sta p1_min_y
-    lda #222
+    lda #228
     sta p2_min_y
 
     ; JUMP VELOCITIES
