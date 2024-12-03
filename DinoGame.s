@@ -542,7 +542,7 @@ rti
     ; Set sprite y
     sta oam + 36
     ; Set sprite tile
-    lda #255
+    lda #119
     sta oam + 36 + 1
     ; Set sprite attributes
     lda #0
@@ -557,7 +557,7 @@ rti
     ; Set sprite y
     sta oam + 40
     ; Set sprite tile
-    lda #255
+    lda #117
     sta oam + 40 + 1
     ; Set sprite attributes
     lda #0
@@ -701,7 +701,7 @@ rti
     ; Set sprite y
     sta oam + 80
     ; Set sprite tile
-    lda #255
+    lda #119
     sta oam + 80 + 1
     ; Set sprite attributes
     lda #0
@@ -716,7 +716,7 @@ rti
     ; Set sprite y
     sta oam + 84
     ; Set sprite tile
-    lda #255
+    lda #117
     sta oam + 84 + 1
     ; Set sprite attributes
     lda #0
