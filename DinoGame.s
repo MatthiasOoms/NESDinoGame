@@ -188,6 +188,7 @@ rti
         jmp ppu_update_end
 
     :
+        cmp #2
 
         bne cont_render
         lda #%00000000
@@ -197,28 +198,6 @@ rti
         jmp ppu_update_end
 
     cont_render:
-
-         ; reset address latch
-         lda PPU_STATUS
-
-         ; Set the high bit of X and Y scroll.
-         lda ppu_ctl0
-         sta PPU_CONTROL
-
-         ; Set the low 8 bits of X and Y scroll.
-         bit PPU_STATUS
-         lda camera_x
-         sta PPU_VRAM_ADDRESS1
-         lda #0
-         sta PPU_VRAM_ADDRESS1
-
-         ldx camera_x
-         inx
-         stx camera_x
-
-
-        cmp #2
-
 
         ;Transfers sprite OAM data using DMA
         ldx #0
@@ -251,6 +230,36 @@ rti
         tax
         pla
         rti
+.endproc
+
+;***************************************************************
+; scroll background horizontally
+;***************************************************************
+.segment "CODE"
+.proc horizontal_scrollling
+
+    ; reset address latch
+         lda PPU_STATUS
+
+         ; Set the high bit of X and Y scroll.
+         lda ppu_ctl0
+         sta PPU_CONTROL
+
+         ; Set the low 8 bits of X and Y scroll.
+         lda PPU_STATUS
+         lda camera_x
+         sta PPU_VRAM_ADDRESS1
+         lda #00
+         sta PPU_VRAM_ADDRESS1
+
+         ldx camera_x
+         inx
+         stx camera_x
+
+        
+
+
+    rts
 .endproc
 
 
@@ -297,6 +306,17 @@ rti
     vram_set_address (NAME_TABLE_0_ADDRESS + 18 * 32)
     jsr draw_horizon
 
+    vram_set_address (NAME_TABLE_1_ADDRESS)
+    jsr draw_horizon
+
+    vram_set_address (NAME_TABLE_1_ADDRESS + 6 * 32)
+    jsr draw_horizon
+
+    vram_set_address (NAME_TABLE_1_ADDRESS + 12 * 32)
+    jsr draw_horizon
+
+    vram_set_address (NAME_TABLE_1_ADDRESS + 18 * 32)
+    jsr draw_horizon
 
 
 .endproc
@@ -387,7 +407,7 @@ rti
     lda #51
     sta oam + 4 + 1
     ; Set sprite attributes
-    lda #0
+    lda #$00000011
     sta oam + 4 + 2
     ; Set sprite x
     lda #48
@@ -444,6 +464,7 @@ paletteloop:
 
             jsr clear_nametable
             lda PPU_STATUS
+
 
 
 jsr init_variables
@@ -525,5 +546,10 @@ FLIP_DY:
 CONTINUE:
     lda #1
     sta nmi_ready
+
+    jsr horizontal_scrollling
+
     jmp mainloop
+
+
 .endproc
