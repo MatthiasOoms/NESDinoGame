@@ -329,35 +329,25 @@ textloop:
         jmp textloop
 :
     ; Set the jump speed
-    lda #2
+    lda #4
     sta jmp_speed
 
     ; MIN JUMP HEIGHTS
-    lda #39
+    lda #104
     sta p1_min_y
-    lda #103
-    sta p2_min_y
-    lda #167
-    sta p3_min_y
     lda #230
-    sta p4_min_y
+    sta p2_min_y
 
     ; JUMP VELOCITIES
     lda #1
     sta p1_dy
     sta p2_dy
-    sta p3_dy
-    sta p4_dy
 
     ; MAX JUMP HEIGHTS
-    lda #8
+    lda #40
     sta p1_max_y
-    lda #72
+    lda #166
     sta p2_max_y
-    lda #136
-    sta p3_max_y
-    lda #200
-    sta p4_max_y
 
     ; Set the sprite attributes
     lda p1_min_y
@@ -385,32 +375,6 @@ textloop:
     ; Set sprite x
     lda #48
     sta oam + 4 + 3
-
-    lda p3_min_y
-    ; Set sprite y
-    sta oam + 8
-    ; Set sprite tile
-    lda #1
-    sta oam + 8 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 8 + 2
-    ; Set sprite x
-    lda #48
-    sta oam + 8 + 3
-
-    lda p4_min_y
-    ; Set sprite y
-    sta oam + 12
-    ; Set sprite tile
-    lda #1
-    sta oam + 12 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 12 + 2
-    ; Set sprite x
-    lda #48
-    sta oam + 12 + 3
 
     jsr ppu_update
 
