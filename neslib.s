@@ -57,6 +57,7 @@ ppu_ctl0:		.res 1 ; PPU Control Register 2 Value
 ppu_ctl1:		.res 1 ; PPU Control Register 2 Value
 
 
+.include "macros.s"
 
 
 ;*****************************************************************
@@ -113,12 +114,9 @@ ppu_ctl1:		.res 1 ; PPU Control Register 2 Value
 .segment "CODE"
 .proc clear_nametable
     lda PPU_STATUS
-    lda #$20
-    sta PPU_VRAM_ADDRESS2
-    lda #$00
-    sta PPU_VRAM_ADDRESS2
+    vram_set_address (NAME_TABLE_0_ADDRESS)
 
-    lda #0
+    lda #255
     ldy #30
 
     rowloop:
@@ -137,6 +135,30 @@ ppu_ctl1:		.res 1 ; PPU Control Register 2 Value
         sta PPU_VRAM_IO
         dex
         bne loop
+
+    lda PPU_STATUS
+    vram_set_address (NAME_TABLE_1_ADDRESS)
+
+    lda #255
+    ldy #30
+
+    rowloop1:
+        ldx #32
+        columnloop1:
+            sta PPU_VRAM_IO
+            dex
+            bne columnloop1
+        dey
+        bne rowloop1
+    
+
+    lda #0
+    ldx #64
+    loop1:
+        sta PPU_VRAM_IO
+        dex
+        bne loop1
+
 
     rts
 .endproc

@@ -16,7 +16,7 @@ PAD_R = $80
 
 .segment "HEADER"
 INES_MAPPER = 0
-INES_MIRROR = 0
+INES_MIRROR = 1
 INES_SRAM = 0
 .byte 'N', 'E', 'S', $1A ; ID
 .byte $02
@@ -69,7 +69,6 @@ oam: .res 256
 ; Include NES Function Library
 ;*****************************************************************
 .include "neslib.s"
-.include "macros.s"
 
 ;*****************************************************************
 ; Our default palette table has 16 entries for tiles
@@ -294,29 +293,19 @@ rti
 .segment "CODE"
 .proc display_game_screen
 
-    vram_set_address (NAME_TABLE_0_ADDRESS)
-    jsr draw_horizon
-
-    vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32)
+    vram_set_address (NAME_TABLE_0_ADDRESS+ 6 * 32)
     jsr draw_horizon
 
     vram_set_address (NAME_TABLE_0_ADDRESS + 12 * 32)
     jsr draw_horizon
 
-    vram_set_address (NAME_TABLE_0_ADDRESS + 18 * 32)
-    jsr draw_horizon
-
-    vram_set_address (NAME_TABLE_1_ADDRESS)
-    jsr draw_horizon
-
-    vram_set_address (NAME_TABLE_1_ADDRESS + 6 * 32)
+    vram_set_address (NAME_TABLE_1_ADDRESS+ 6 * 32)
     jsr draw_horizon
 
     vram_set_address (NAME_TABLE_1_ADDRESS + 12 * 32)
     jsr draw_horizon
 
-    vram_set_address (NAME_TABLE_1_ADDRESS + 18 * 32)
-    jsr draw_horizon
+
 
 
 .endproc
