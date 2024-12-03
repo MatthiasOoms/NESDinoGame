@@ -480,15 +480,11 @@ mainloop:
     cmp #0
     bne mainloop
 
-<<<<<<< HEAD
-    ; Gamepad state
-=======
     ; Only allow input if the player is on the ground
     lda oam
     cmp p1_min_y
     bcc NOT_INPUT
 
->>>>>>> origin/JumpBranch
     jsr gamepad_poll
     lda gamepad
     and #PAD_U
