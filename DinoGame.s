@@ -329,71 +329,41 @@ textloop:
         jmp textloop
 :
     ; Set the jump speed
-    lda #2
+    lda #3
     sta jmp_speed
 
     ; MIN JUMP HEIGHTS
-    lda #39
+    lda #104
     sta p1_min_y
-    lda #103
-    sta p2_min_y
-    lda #167
-    sta p3_min_y
     lda #230
-    sta p4_min_y
+    sta p2_min_y
 
     ; JUMP VELOCITIES
     lda #1
     sta p1_dy
     sta p2_dy
-    sta p3_dy
-    sta p4_dy
 
     ; MAX JUMP HEIGHTS
-    lda #8
+    lda #40
     sta p1_max_y
-    lda #72
+    lda #166
     sta p2_max_y
-    lda #136
-    sta p3_max_y
-    lda #200
-    sta p4_max_y
 
-    ; Set the sprite attributes
+    ; P1__________________________________________________________
     lda p1_min_y
     ; Set sprite y
     sta oam
-    sta oam+16
-    lda #31
-    sta oam+20
-    sta oam+24
     ; Set sprite tile
-    ; lda #1
-    ; sta oam + 1
-    ldx #1
-    stx oam+1
-    inx
-    stx oam+17
-    inx
-    stx oam+21
-    inx
-    stx oam+25
-
+    lda #1
+    sta oam + 1
     ; Set sprite attributes
     lda #0
     sta oam + 2
-    sta oam + 18
-    sta oam + 22
-    sta oam + 26
     ; Set sprite x
     lda #48
     sta oam + 3
-    sta oam + 23
-    lda #56
-    sta oam + 19
-    sta oam + 27
 
-    lda p2_min_y
+    lda p1_min_y
     ; Set sprite y
     sta oam + 4
     ; Set sprite tile
@@ -403,10 +373,12 @@ textloop:
     lda #0
     sta oam + 4 + 2
     ; Set sprite x
-    lda #48
+    lda #56
     sta oam + 4 + 3
 
-    lda p3_min_y
+    lda p1_min_y
+    sec
+    sbc #8
     ; Set sprite y
     sta oam + 8
     ; Set sprite tile
@@ -419,7 +391,9 @@ textloop:
     lda #48
     sta oam + 8 + 3
 
-    lda p4_min_y
+    lda p1_min_y
+    sec
+    sbc #8
     ; Set sprite y
     sta oam + 12
     ; Set sprite tile
@@ -429,8 +403,183 @@ textloop:
     lda #0
     sta oam + 12 + 2
     ; Set sprite x
-    lda #48
+    lda #56
     sta oam + 12 + 3
+
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 16
+    ; Set sprite tile
+    lda #1
+    sta oam + 16 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 16 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 16 + 3
+
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 20
+    ; Set sprite tile
+    lda #1
+    sta oam + 20 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 20 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 20 + 3
+
+    lda p1_min_y
+    ; Set sprite y
+    sta oam + 24
+    ; Set sprite tile
+    lda #1
+    sta oam + 24 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 24 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 24 + 3
+
+    lda p1_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 28
+    ; Set sprite tile
+    lda #1
+    sta oam + 28 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 28 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 28 + 3
+    ;P1__________________________________________________________
+
+    ; P2__________________________________________________________
+    lda p2_min_y
+    ; Set sprite y
+    sta oam + 32
+    ; Set sprite tile
+    lda #1
+    sta oam + 32 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 32 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 32 + 3
+
+    lda p2_min_y
+    ; Set sprite y
+    sta oam + 36
+    ; Set sprite tile
+    lda #1
+    sta oam + 36 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 36 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 36 + 3
+
+    lda p2_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 40
+    ; Set sprite tile
+    lda #1
+    sta oam + 40 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 40 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 40 + 3
+
+    lda p2_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 44
+    ; Set sprite tile
+    lda #1
+    sta oam + 44 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 44 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 44 + 3
+
+    lda p2_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 48
+    ; Set sprite tile
+    lda #1
+    sta oam + 48 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 48 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 48 + 3
+
+    lda p2_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 52
+    ; Set sprite tile
+    lda #1
+    sta oam + 52 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 52 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 52 + 3
+
+    lda p2_min_y
+    ; Set sprite y
+    sta oam + 56
+    ; Set sprite tile
+    lda #1
+    sta oam + 56 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 56 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 56 + 3
+
+    lda p2_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 60
+    ; Set sprite tile
+    lda #1
+    sta oam + 60 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 60 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 60 + 3
+    ;P2_______________________________________
 
     jsr ppu_update
 
