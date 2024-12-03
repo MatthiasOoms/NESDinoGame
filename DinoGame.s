@@ -67,6 +67,13 @@ p4_dy: .res 1
 
 jmp_speed: .res 1
 
+; time variables
+time: .res 2
+lasttime: .res 1
+
+p1_duck: .res 1
+p2_duck: .res 2
+
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
 ;*****************************************************************
@@ -178,6 +185,12 @@ wait_vblank2:
     pha
     tya
     pha
+
+    ; increment time tick counter
+    inc time
+    bne :+
+            inc time+1
+    :
 
     ; Do we need to render
     lda nmi_ready
@@ -343,6 +356,11 @@ textloop:
     sta p1_dy
     sta p2_dy
 
+    ; DUCK BOOLS
+    lda #0
+    sta p1_duck
+    sta p2_duck
+
     ; MAX JUMP HEIGHTS
     lda #40
     sta p1_max_y
@@ -463,10 +481,10 @@ textloop:
     ; Set sprite x
     lda #64
     sta oam + 28 + 3
-    ;P1__________________________________________________________
 
-    ; P2__________________________________________________________
-    lda p2_min_y
+    lda p1_min_y
+    sec
+    sbc #16
     ; Set sprite y
     sta oam + 32
     ; Set sprite tile
@@ -476,40 +494,40 @@ textloop:
     lda #0
     sta oam + 32 + 2
     ; Set sprite x
-    lda #48
+    lda #64
     sta oam + 32 + 3
 
-    lda p2_min_y
+    lda p1_min_y
     ; Set sprite y
     sta oam + 36
     ; Set sprite tile
-    lda #1
+    lda #0
     sta oam + 36 + 1
     ; Set sprite attributes
     lda #0
     sta oam + 36 + 2
     ; Set sprite x
-    lda #56
+    lda #72
     sta oam + 36 + 3
 
-    lda p2_min_y
+    lda p1_min_y
     sec
     sbc #8
     ; Set sprite y
     sta oam + 40
     ; Set sprite tile
-    lda #1
+    lda #0
     sta oam + 40 + 1
     ; Set sprite attributes
     lda #0
     sta oam + 40 + 2
     ; Set sprite x
-    lda #48
+    lda #72
     sta oam + 40 + 3
+    ;P1__________________________________________________________
 
+    ; P2__________________________________________________________
     lda p2_min_y
-    sec
-    sbc #8
     ; Set sprite y
     sta oam + 44
     ; Set sprite tile
@@ -519,12 +537,10 @@ textloop:
     lda #0
     sta oam + 44 + 2
     ; Set sprite x
-    lda #56
+    lda #48
     sta oam + 44 + 3
 
     lda p2_min_y
-    sec
-    sbc #16
     ; Set sprite y
     sta oam + 48
     ; Set sprite tile
@@ -534,12 +550,12 @@ textloop:
     lda #0
     sta oam + 48 + 2
     ; Set sprite x
-    lda #48
+    lda #56
     sta oam + 48 + 3
 
     lda p2_min_y
     sec
-    sbc #16
+    sbc #8
     ; Set sprite y
     sta oam + 52
     ; Set sprite tile
@@ -549,10 +565,12 @@ textloop:
     lda #0
     sta oam + 52 + 2
     ; Set sprite x
-    lda #56
+    lda #48
     sta oam + 52 + 3
 
     lda p2_min_y
+    sec
+    sbc #8
     ; Set sprite y
     sta oam + 56
     ; Set sprite tile
@@ -562,12 +580,12 @@ textloop:
     lda #0
     sta oam + 56 + 2
     ; Set sprite x
-    lda #64
+    lda #56
     sta oam + 56 + 3
 
     lda p2_min_y
     sec
-    sbc #8
+    sbc #16
     ; Set sprite y
     sta oam + 60
     ; Set sprite tile
@@ -577,9 +595,95 @@ textloop:
     lda #0
     sta oam + 60 + 2
     ; Set sprite x
-    lda #64
+    lda #48
     sta oam + 60 + 3
-    ;P2_______________________________________
+
+    lda p2_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 64
+    ; Set sprite tile
+    lda #1
+    sta oam + 64 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 64 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 64 + 3
+
+    lda p2_min_y
+    ; Set sprite y
+    sta oam + 68
+    ; Set sprite tile
+    lda #1
+    sta oam + 68 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 68 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 68 + 3
+
+    lda p2_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 72
+    ; Set sprite tile
+    lda #1
+    sta oam + 72 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 72 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 72 + 3
+
+    lda p2_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 76
+    ; Set sprite tile
+    lda #1
+    sta oam + 76 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 76 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 76 + 3
+
+    lda p2_min_y
+    ; Set sprite y
+    sta oam + 80
+    ; Set sprite tile
+    lda #1
+    sta oam + 80 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 80 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 80 + 3
+
+    lda p2_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 84
+    ; Set sprite tile
+    lda #1
+    sta oam + 84 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 84 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 84 + 3
+    ;P2__________________________________________________________
 
     jsr ppu_update
 
@@ -587,6 +691,11 @@ mainloop:
     lda nmi_ready
     cmp #0
     bne mainloop
+
+    lda time
+    cmp lasttime
+    beq mainloop
+    sta lasttime
 
     ; Only allow input if the player is on the ground
     lda oam
@@ -606,15 +715,13 @@ GAMEPAD_UP:
     and #PAD_D
     ; Is down pressed?
     beq GAMEPAD_DOWN
-    lda #1
-    sta p1_dy
+    ; duck and change sprite location
+    jsr player_duck
 
 GAMEPAD_DOWN:
     lda gamepad
     and #PAD_L
-    beq NOT_INPUT
-    lda #1
-    sta p1_dy
+    beq NOT_INPUT  
 
 NOT_INPUT:
     ; If dy is 1, add 1 = move down
@@ -692,4 +799,89 @@ CONTINUE:
     lda #1
     sta nmi_ready
     jmp mainloop
+.endproc
+
+;**************************************************************
+; Ducking code and sprite change
+;**************************************************************
+.segment "CODE"
+.proc player_duck
+    ; nose tiles
+    lda p1_min_y
+    ; Set sprite y
+    sta oam + 36
+    ; Set sprite tile
+    lda #1
+    sta oam + 36 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 36 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 36 + 3
+
+    lda p1_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 40
+    ; Set sprite tile
+    lda #1
+    sta oam + 40 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 40 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 40 + 3
+    
+    ; top head removes
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 16
+    ; Set sprite tile
+    lda #0
+    sta oam + 16 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 16 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 16 + 3
+
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 20
+    ; Set sprite tile
+    lda #0
+    sta oam + 20 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 20 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 20 + 3
+    
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 32
+    ; Set sprite tile
+    lda #0
+    sta oam + 32 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 32 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 32 + 3
+
+    lda #1
+    sta p1_duck
+    rts
 .endproc
