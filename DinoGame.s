@@ -464,10 +464,10 @@ textloop:
     ; Set sprite x
     lda #64
     sta oam + 28 + 3
-    ;P1__________________________________________________________
 
-    ; P2__________________________________________________________
-    lda p2_min_y
+    lda p1_min_y
+    sec
+    sbc #16
     ; Set sprite y
     sta oam + 32
     ; Set sprite tile
@@ -477,10 +477,10 @@ textloop:
     lda #0
     sta oam + 32 + 2
     ; Set sprite x
-    lda #48
+    lda #64
     sta oam + 32 + 3
 
-    lda p2_min_y
+    lda p1_min_y
     ; Set sprite y
     sta oam + 36
     ; Set sprite tile
@@ -490,10 +490,10 @@ textloop:
     lda #0
     sta oam + 36 + 2
     ; Set sprite x
-    lda #56
+    lda #72
     sta oam + 36 + 3
 
-    lda p2_min_y
+    lda p1_min_y
     sec
     sbc #8
     ; Set sprite y
@@ -505,12 +505,12 @@ textloop:
     lda #0
     sta oam + 40 + 2
     ; Set sprite x
-    lda #48
+    lda #72
     sta oam + 40 + 3
+    ;P1__________________________________________________________
 
+    ; P2__________________________________________________________
     lda p2_min_y
-    sec
-    sbc #8
     ; Set sprite y
     sta oam + 44
     ; Set sprite tile
@@ -520,12 +520,10 @@ textloop:
     lda #0
     sta oam + 44 + 2
     ; Set sprite x
-    lda #56
+    lda #48
     sta oam + 44 + 3
 
     lda p2_min_y
-    sec
-    sbc #16
     ; Set sprite y
     sta oam + 48
     ; Set sprite tile
@@ -535,12 +533,12 @@ textloop:
     lda #0
     sta oam + 48 + 2
     ; Set sprite x
-    lda #48
+    lda #56
     sta oam + 48 + 3
 
     lda p2_min_y
     sec
-    sbc #16
+    sbc #8
     ; Set sprite y
     sta oam + 52
     ; Set sprite tile
@@ -550,10 +548,12 @@ textloop:
     lda #0
     sta oam + 52 + 2
     ; Set sprite x
-    lda #56
+    lda #48
     sta oam + 52 + 3
 
     lda p2_min_y
+    sec
+    sbc #8
     ; Set sprite y
     sta oam + 56
     ; Set sprite tile
@@ -563,12 +563,12 @@ textloop:
     lda #0
     sta oam + 56 + 2
     ; Set sprite x
-    lda #64
+    lda #56
     sta oam + 56 + 3
 
     lda p2_min_y
     sec
-    sbc #8
+    sbc #16
     ; Set sprite y
     sta oam + 60
     ; Set sprite tile
@@ -578,8 +578,94 @@ textloop:
     lda #0
     sta oam + 60 + 2
     ; Set sprite x
-    lda #64
+    lda #48
     sta oam + 60 + 3
+
+    lda p2_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 64
+    ; Set sprite tile
+    lda #1
+    sta oam + 64 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 64 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 64 + 3
+
+    lda p2_min_y
+    ; Set sprite y
+    sta oam + 68
+    ; Set sprite tile
+    lda #1
+    sta oam + 68 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 68 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 68 + 3
+
+    lda p2_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 72
+    ; Set sprite tile
+    lda #1
+    sta oam + 72 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 72 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 72 + 3
+
+    lda p2_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 76
+    ; Set sprite tile
+    lda #1
+    sta oam + 76 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 76 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 76 + 3
+
+    lda p2_min_y
+    ; Set sprite y
+    sta oam + 80
+    ; Set sprite tile
+    lda #1
+    sta oam + 80 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 80 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 80 + 3
+
+    lda p2_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 84
+    ; Set sprite tile
+    lda #1
+    sta oam + 84 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 84 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 84 + 3
     ;P2__________________________________________________________
 
     jsr ppu_update
@@ -663,6 +749,18 @@ MOVE_DOWN:
     clc
     adc jmp_speed
     sta oam + 28
+    lda oam + 32
+    clc
+    adc jmp_speed
+    sta oam + 32
+    lda oam + 36
+    clc
+    adc jmp_speed
+    sta oam + 36
+    lda oam + 40
+    clc
+    adc jmp_speed
+    sta oam + 40
     jmp CONTINUE
 
 FLIP_DY:
@@ -713,6 +811,18 @@ MOVE_UP:
     sec
     sbc jmp_speed
     sta oam + 28
+    lda oam + 32
+    sec
+    sbc jmp_speed
+    sta oam + 32
+    lda oam + 36
+    sec
+    sbc jmp_speed
+    sta oam + 36
+    lda oam + 40
+    sec
+    sbc jmp_speed
+    sta oam + 40
     jmp CONTINUE
 
 CONTINUE:
