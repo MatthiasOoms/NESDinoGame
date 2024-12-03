@@ -329,7 +329,7 @@ textloop:
         jmp textloop
 :
     ; Set the jump speed
-    lda #4
+    lda #3
     sta jmp_speed
 
     ; MIN JUMP HEIGHTS
@@ -635,6 +635,41 @@ MOVE_DOWN:
     clc
     adc jmp_speed
     sta oam
+    lda oam + 4
+    clc
+    adc jmp_speed
+    sta oam + 4
+    lda oam + 8
+    clc
+    adc jmp_speed
+    sta oam + 8
+    lda oam + 12
+    clc
+    adc jmp_speed
+    sta oam + 12
+    lda oam + 16
+    clc
+    adc jmp_speed
+    sta oam + 16
+    lda oam + 20
+    clc
+    adc jmp_speed
+    sta oam + 20
+    lda oam + 24
+    clc
+    adc jmp_speed
+    sta oam + 24
+    lda oam + 28
+    clc
+    adc jmp_speed
+    sta oam + 28
+    jmp CONTINUE
+
+FLIP_DY:
+    ; Flip the player direction
+    clc
+    lda #1
+    sta p1_dy
     jmp CONTINUE
 
 MOVE_UP:
@@ -650,13 +685,34 @@ MOVE_UP:
     sec
     sbc jmp_speed
     sta oam
-    jmp CONTINUE
-
-FLIP_DY:
-    ; Flip the player direction
-    clc
-    lda #1
-    sta p1_dy
+    lda oam + 4
+    sec
+    sbc jmp_speed
+    sta oam + 4
+    lda oam + 8
+    sec
+    sbc jmp_speed
+    sta oam + 8
+    lda oam + 12
+    sec
+    sbc jmp_speed
+    sta oam + 12
+    lda oam + 16
+    sec
+    sbc jmp_speed
+    sta oam + 16
+    lda oam + 20
+    sec
+    sbc jmp_speed
+    sta oam + 20
+    lda oam + 24
+    sec
+    sbc jmp_speed
+    sta oam + 24
+    lda oam + 28
+    sec
+    sbc jmp_speed
+    sta oam + 28
     jmp CONTINUE
 
 CONTINUE:
