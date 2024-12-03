@@ -716,6 +716,11 @@ GAMEPAD_UP:
     ; Is down pressed?
     beq GAMEPAD_DOWN
     ; duck and change sprite location
+    lda p1_duck
+    cmp #0
+    beq PLAYER_DUCK
+
+PLAYER_DUCK:
     jsr player_duck
 
 GAMEPAD_DOWN:
@@ -731,7 +736,14 @@ NOT_INPUT:
     beq MOVE_UP
     cmp #1
     beq MOVE_DOWN
+
+    lda p1_duck
+    cmp #1
+    beq PLAYER_UNDUCK
     jmp CONTINUE
+
+PLAYER_UNDUCK:
+    jsr player_unduck
 
 MOVE_DOWN:
     lda oam
@@ -882,6 +894,88 @@ CONTINUE:
     sta oam + 32 + 3
 
     lda #1
+    sta p1_duck
+    rts
+.endproc
+
+.segment "CODE"
+.proc player_unduck
+    ; nose tiles
+    lda p1_min_y
+    ; Set sprite y
+    sta oam + 36
+    ; Set sprite tile
+    lda #0
+    sta oam + 36 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 36 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 36 + 3
+
+    lda p1_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 40
+    ; Set sprite tile
+    lda #0
+    sta oam + 40 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 40 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 40 + 3
+    
+    ; top head removes
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 16
+    ; Set sprite tile
+    lda #1
+    sta oam + 16 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 16 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 16 + 3
+
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 20
+    ; Set sprite tile
+    lda #1
+    sta oam + 20 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 20 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 20 + 3
+    
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 32
+    ; Set sprite tile
+    lda #1
+    sta oam + 32 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 32 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 32 + 3
+
+    lda #0
     sta p1_duck
     rts
 .endproc
