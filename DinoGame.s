@@ -413,7 +413,7 @@ rti
     ; Set sprite y
     sta oam
     ; Set sprite tile
-    lda #51
+    lda #105
     sta oam + 1
     ; Set sprite attributes
     lda #0
@@ -426,7 +426,7 @@ rti
     ; Set sprite y
     sta oam + 4
     ; Set sprite tile
-    lda #51
+    lda #106
     sta oam + 4 + 1
     ; Set sprite attributes
     lda #$00000011
@@ -441,7 +441,7 @@ rti
     ; Set sprite y
     sta oam + 8
     ; Set sprite tile
-    lda #51
+    lda #102
     sta oam + 8 + 1
     ; Set sprite attributes
     lda #0
@@ -456,7 +456,7 @@ rti
     ; Set sprite y
     sta oam + 12
     ; Set sprite tile
-    lda #51
+    lda #103
     sta oam + 12 + 1
     ; Set sprite attributes
     lda #0
@@ -471,7 +471,7 @@ rti
     ; Set sprite y
     sta oam + 16
     ; Set sprite tile
-    lda #1
+    lda #255
     sta oam + 16 + 1
     ; Set sprite attributes
     lda #0
@@ -486,7 +486,7 @@ rti
     ; Set sprite y
     sta oam + 20
     ; Set sprite tile
-    lda #1
+    lda #100
     sta oam + 20 + 1
     ; Set sprite attributes
     lda #0
@@ -499,7 +499,7 @@ rti
     ; Set sprite y
     sta oam + 24
     ; Set sprite tile
-    lda #1
+    lda #255
     sta oam + 24 + 1
     ; Set sprite attributes
     lda #0
@@ -514,7 +514,7 @@ rti
     ; Set sprite y
     sta oam + 28
     ; Set sprite tile
-    lda #1
+    lda #104
     sta oam + 28 + 1
     ; Set sprite attributes
     lda #0
@@ -529,7 +529,7 @@ rti
     ; Set sprite y
     sta oam + 32
     ; Set sprite tile
-    lda #1
+    lda #101
     sta oam + 32 + 1
     ; Set sprite attributes
     lda #0
@@ -542,7 +542,7 @@ rti
     ; Set sprite y
     sta oam + 36
     ; Set sprite tile
-    lda #1
+    lda #255
     sta oam + 36 + 1
     ; Set sprite attributes
     lda #0
@@ -557,7 +557,7 @@ rti
     ; Set sprite y
     sta oam + 40
     ; Set sprite tile
-    lda #1
+    lda #255
     sta oam + 40 + 1
     ; Set sprite attributes
     lda #0
@@ -572,7 +572,7 @@ rti
     ; Set sprite y
     sta oam + 44
     ; Set sprite tile
-    lda #1
+    lda #105
     sta oam + 44 + 1
     ; Set sprite attributes
     lda #0
@@ -585,7 +585,7 @@ rti
     ; Set sprite y
     sta oam + 48
     ; Set sprite tile
-    lda #1
+    lda #106
     sta oam + 48 + 1
     ; Set sprite attributes
     lda #0
@@ -600,7 +600,7 @@ rti
     ; Set sprite y
     sta oam + 52
     ; Set sprite tile
-    lda #1
+    lda #102
     sta oam + 52 + 1
     ; Set sprite attributes
     lda #0
@@ -615,7 +615,7 @@ rti
     ; Set sprite y
     sta oam + 56
     ; Set sprite tile
-    lda #1
+    lda #103
     sta oam + 56 + 1
     ; Set sprite attributes
     lda #0
@@ -630,7 +630,7 @@ rti
     ; Set sprite y
     sta oam + 60
     ; Set sprite tile
-    lda #1
+    lda #255
     sta oam + 60 + 1
     ; Set sprite attributes
     lda #0
@@ -645,7 +645,7 @@ rti
     ; Set sprite y
     sta oam + 64
     ; Set sprite tile
-    lda #1
+    lda #100
     sta oam + 64 + 1
     ; Set sprite attributes
     lda #0
@@ -658,7 +658,7 @@ rti
     ; Set sprite y
     sta oam + 68
     ; Set sprite tile
-    lda #1
+    lda #255
     sta oam + 68 + 1
     ; Set sprite attributes
     lda #0
@@ -673,7 +673,7 @@ rti
     ; Set sprite y
     sta oam + 72
     ; Set sprite tile
-    lda #1
+    lda #104
     sta oam + 72 + 1
     ; Set sprite attributes
     lda #0
@@ -688,7 +688,7 @@ rti
     ; Set sprite y
     sta oam + 76
     ; Set sprite tile
-    lda #1
+    lda #101
     sta oam + 76 + 1
     ; Set sprite attributes
     lda #0
@@ -701,7 +701,7 @@ rti
     ; Set sprite y
     sta oam + 80
     ; Set sprite tile
-    lda #1
+    lda #255
     sta oam + 80 + 1
     ; Set sprite attributes
     lda #0
@@ -716,7 +716,7 @@ rti
     ; Set sprite y
     sta oam + 84
     ; Set sprite tile
-    lda #1
+    lda #255
     sta oam + 84 + 1
     ; Set sprite attributes
     lda #0
