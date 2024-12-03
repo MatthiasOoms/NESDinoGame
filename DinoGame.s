@@ -333,9 +333,9 @@ textloop:
     sta jmp_speed
 
     ; MIN JUMP HEIGHTS
-    lda #104
+    lda #96
     sta p1_min_y
-    lda #230
+    lda #222
     sta p2_min_y
 
     ; JUMP VELOCITIES
@@ -344,9 +344,9 @@ textloop:
     sta p2_dy
 
     ; MAX JUMP HEIGHTS
-    lda #40
+    lda #32
     sta p1_max_y
-    lda #166
+    lda #158
     sta p2_max_y
 
     ; Set the sprite attributes
