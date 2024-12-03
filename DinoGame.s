@@ -69,7 +69,6 @@ oam: .res 256
 ; Include NES Function Library
 ;*****************************************************************
 .include "neslib.s"
-
 .include "macros.s"
 
 ;*****************************************************************
@@ -89,7 +88,7 @@ default_palette:
 
 
 horizon_line:
-.byte 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 0
+.byte 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75
 
 ;*****************************************************************
 ; Import both the background and sprite character sets
@@ -181,13 +180,15 @@ rti
     tya
     pha
 
+    
+
     ; Do we need to render
     lda nmi_ready
     bne :+
         jmp ppu_update_end
 
     :
-        cmp #2
+
         bne cont_render
         lda #%00000000
         sta PPU_MASK
@@ -196,6 +197,29 @@ rti
         jmp ppu_update_end
 
     cont_render:
+
+         ; reset address latch
+         lda PPU_STATUS
+
+         ; Set the high bit of X and Y scroll.
+         lda ppu_ctl0
+         sta PPU_CONTROL
+
+         ; Set the low 8 bits of X and Y scroll.
+         bit PPU_STATUS
+         lda camera_x
+         sta PPU_VRAM_ADDRESS1
+         lda #0
+         sta PPU_VRAM_ADDRESS1
+
+         ldx camera_x
+         inx
+         stx camera_x
+
+
+        cmp #2
+
+
         ;Transfers sprite OAM data using DMA
         ldx #0
         stx PPU_SPRRAM_ADDRESS
@@ -206,10 +230,9 @@ rti
         lda #%10001000
         sta PPU_CONTROL
         lda PPU_STATUS
-        lda #$3F
-        ldx #$00
-        sta PPU_VRAM_ADDRESS2
-        stx PPU_VRAM_ADDRESS2
+
+        vram_set_address ($3F00)
+
         ldx #0
     loop:
             lda palette, x
@@ -241,15 +264,14 @@ rti
     ;reset address latch
     lda PPU_STATUS
 
-
     ;iterate over the horizon line
     ldx #0
     loop:
         lda horizon_line, x
         sta PPU_VRAM_IO
         inx
-        cmp #0
-        beq :+
+        cpx #32
+        beq :+ 
         jmp loop
 
     :
@@ -266,29 +288,15 @@ rti
     vram_set_address (NAME_TABLE_0_ADDRESS)
     jsr draw_horizon
 
-    vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32)
+    vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32)
     jsr draw_horizon
 
-    vram_set_address (NAME_TABLE_0_ADDRESS + 8 * 32)
+    vram_set_address (NAME_TABLE_0_ADDRESS + 12 * 32)
     jsr draw_horizon
 
-    vram_set_address (NAME_TABLE_0_ADDRESS + 16 * 32)
+    vram_set_address (NAME_TABLE_0_ADDRESS + 18 * 32)
     jsr draw_horizon
 
-    ; reset address latch
-    lda PPU_STATUS
-
-    ; Set the high bit of X and Y scroll.
-    lda ppu_ctl0
-    sta PPU_CONTROL
-
-    ; Set the low 8 bits of X and Y scroll.
-    bit PPU_STATUS
-    lda camera_x
-    sta PPU_VRAM_ADDRESS1
-    lda #0
-    sta PPU_VRAM_ADDRESS1
-    
 
 
 .endproc
@@ -363,7 +371,7 @@ rti
     ; Set sprite y
     sta oam
     ; Set sprite tile
-    lda #3
+    lda #51
     sta oam + 1
     ; Set sprite attributes
     lda #0
@@ -376,7 +384,7 @@ rti
     ; Set sprite y
     sta oam + 4
     ; Set sprite tile
-    lda #3
+    lda #51
     sta oam + 4 + 1
     ; Set sprite attributes
     lda #0
@@ -389,7 +397,7 @@ rti
     ; Set sprite y
     sta oam + 8
     ; Set sprite tile
-    lda #3
+    lda #51
     sta oam + 8 + 1
     ; Set sprite attributes
     lda #0
@@ -402,7 +410,7 @@ rti
     ; Set sprite y
     sta oam + 12
     ; Set sprite tile
-    lda #3
+    lda #51
     sta oam + 12 + 1
     ; Set sprite attributes
     lda #0
@@ -446,11 +454,6 @@ jsr ppu_update
 
 
 mainloop:
-
-    ldx camera_x
-    inx
-    stx camera_x
-
 
     lda nmi_ready
     cmp #0

@@ -79,6 +79,8 @@ ppu_ctl1:		.res 1 ; PPU Control Register 2 Value
     lda ppu_ctl0
     ora #VBLANK_NMI
     sta ppu_ctl0
+    ora #OBJ_ON|BG_ON
+
     sta PPU_CONTROL
     lda ppu_ctl1
     ora #OBJ_ON|BG_ON
