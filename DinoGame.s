@@ -50,20 +50,14 @@ gamepad: .res 1
 ; Y position of the players
 p1_min_y: .res 1
 p2_min_y: .res 1
-p3_min_y: .res 1
-p4_min_y: .res 1
 
 ; Max Y position of the players
 p1_max_y: .res 1
 p2_max_y: .res 1
-p3_max_y: .res 1
-p4_max_y: .res 1
 
 ; Y velocity of the players ; $FF = jumping ; $01 = falling/not jumping
 p1_dy: .res 1
 p2_dy: .res 1
-p3_dy: .res 1
-p4_dy: .res 1
 
 jmp_speed: .res 1
 
@@ -274,60 +268,8 @@ loop:
         rts
 .endproc
 
-;***************************************************************
-; gamepad_poll: this reads the gamepad state into the variable
-; labeled "gamepad".
-; This only reads the first gamepad, and also if DPCM samples
-; are played they can conflict with gamepad reading,
-; which may give incorrect results.
-;***************************************************************
 .segment "CODE"
-.proc gamepad_poll
-    lda #1
-    sta JOYPAD1
-    lda #0
-    sta JOYPAD1
-    ldx #8
-loop:
-        pha
-        lda JOYPAD1
-        and #%00000011
-        cmp #%00000001
-        pla
-        ror
-        dex
-        bne loop
-        sta gamepad
-    rts
-.endproc
-
-;**************************************************************
-; Main application logic section includes the game loop
-;**************************************************************
-.segment "CODE"
-.proc main
-    ldx #0
-paletteloop:
-        lda default_palette, x
-        sta palette, x
-        inx
-        cpx #32
-        bcc paletteloop
-        jsr clear_nametable
-        lda PPU_STATUS
-    lda #$20
-    sta PPU_VRAM_ADDRESS2
-    lda #$8A
-    sta PPU_VRAM_ADDRESS2
-    ldx #0
-textloop:
-        lda welcome_txt, x
-        sta PPU_VRAM_IO
-        inx
-        cmp #0
-        beq :+
-        jmp textloop
-:
+.proc initialisation
     ; Set the jump speed
     lda #3
     sta jmp_speed
@@ -348,6 +290,9 @@ textloop:
     sta p1_max_y
     lda #158
     sta p2_max_y
+
+    ; Indices
+
 
     ; Set the sprite attributes
     ; P1__________________________________________________________
@@ -667,7 +612,65 @@ textloop:
     lda #72
     sta oam + 84 + 3
     ;P2__________________________________________________________
+.endproc
 
+;***************************************************************
+; gamepad_poll: this reads the gamepad state into the variable
+; labeled "gamepad".
+; This only reads the first gamepad, and also if DPCM samples
+; are played they can conflict with gamepad reading,
+; which may give incorrect results.
+;***************************************************************
+.segment "CODE"
+.proc gamepad_poll
+    lda #1
+    sta JOYPAD1
+    lda #0
+    sta JOYPAD1
+    ldx #8
+loop:
+        pha
+        lda JOYPAD1
+        and #%00000011
+        cmp #%00000001
+        pla
+        ror
+        dex
+        bne loop
+        sta gamepad
+    rts
+.endproc
+
+;**************************************************************
+; Main application logic section includes the game loop
+;**************************************************************
+.segment "CODE"
+.proc main
+    ldx #0
+paletteloop:
+        lda default_palette, x
+        sta palette, x
+        inx
+        cpx #32
+        bcc paletteloop
+        jsr clear_nametable
+        lda PPU_STATUS
+
+    jsr initialisation
+
+    lda #$20
+    sta PPU_VRAM_ADDRESS2
+    lda #$8A
+    sta PPU_VRAM_ADDRESS2
+    ldx #0
+textloop:
+    lda welcome_txt, x
+    sta PPU_VRAM_IO
+    inx
+    cmp #0
+    beq :+
+    jmp textloop
+:
     jsr ppu_update
 
 mainloop:
@@ -826,6 +829,9 @@ MOVE_UP:
     jmp CONTINUE
 
 CONTINUE:
+    ; Object logic
+
+
     lda #1
     sta nmi_ready
     jmp mainloop
