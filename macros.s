@@ -1,5 +1,18 @@
 
 ;******************************************************************************
+; Set the ram address pointer (destination) to the specified address
+;******************************************************************************
+.macro assign_address_to_ram destination, address
+
+   lda #<address
+   sta destination + 0
+   lda #>address
+   sta destination + 1
+
+.endmacro
+
+
+;******************************************************************************
 ; Set the vram address pointer to the specified address
 ;******************************************************************************
 .macro vram_set_address newaddress

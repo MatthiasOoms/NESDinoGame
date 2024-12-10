@@ -162,3 +162,28 @@ ppu_ctl1:		.res 1 ; PPU Control Register 2 Value
 
     rts
 .endproc
+
+
+
+;*****************************************************************
+; write_text . display text on screen
+; text_address - address of text, set beforehand
+; set ppu address before calling this function
+;*****************************************************************
+
+.segment "ZEROPAGE"
+
+text_address:	.res 2
+
+.segment "CODE"
+.proc write_text
+	ldy #0
+loop:
+	lda (text_address),y 
+	beq exit ; exit if 0
+	sta PPU_VRAM_IO
+	iny
+	jmp loop
+exit:
+	rts
+.endproc
