@@ -1034,8 +1034,6 @@ rts
 
     ; Obstacle y pos on ground
     lda p1_min_y
-    clc
-    adc #8
     sta oam + 88
     ; Set sprite tile
     lda #1
@@ -1142,10 +1140,10 @@ GAMEPAD_NOT_UP:
 
     ; duck and change sprite location
     jsr player_duck
+    jmp NOT_INPUT
 
 GAMEPAD_NOT_DOWN:
     jsr player_unduck
-    jmp NOT_INPUT
 
 NOT_INPUT:
     ; If dy is 1, add 1 = move down
@@ -1348,7 +1346,7 @@ NOT_COLLIDED:
     ; Set sprite y
     sta oam + 36
     ; Set sprite tile
-    lda #1
+    lda #117
     sta oam + 36 + 1
     ; Set sprite attributes
     lda #0
@@ -1363,7 +1361,7 @@ NOT_COLLIDED:
     ; Set sprite y
     sta oam + 40
     ; Set sprite tile
-    lda #1
+    lda #117
     sta oam + 40 + 1
     ; Set sprite attributes
     lda #0
@@ -1465,7 +1463,7 @@ NOT_COLLIDED:
     ; Set sprite y
     sta oam + 16
     ; Set sprite tile
-    lda #1
+    lda #117
     sta oam + 16 + 1
     ; Set sprite attributes
     lda #0
@@ -1480,7 +1478,7 @@ NOT_COLLIDED:
     ; Set sprite y
     sta oam + 20
     ; Set sprite tile
-    lda #1
+    lda #117
     sta oam + 20 + 1
     ; Set sprite attributes
     lda #0
@@ -1495,7 +1493,7 @@ NOT_COLLIDED:
     ; Set sprite y
     sta oam + 32
     ; Set sprite tile
-    lda #1
+    lda #117
     sta oam + 32 + 1
     ; Set sprite attributes
     lda #0
@@ -1506,8 +1504,7 @@ NOT_COLLIDED:
 
     lda #0
     sta p1_duck
-    rts
-
+    
 RETURN:
     rts
 .endproc
