@@ -71,6 +71,9 @@ obstacle1_type: .res 1
 obstacle2_type: .res 1
 obstacle3_type: .res 1
 
+; scroll speed of obstacles
+obstacle_scroll: .res 1
+
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
 ;*****************************************************************
@@ -632,8 +635,14 @@ loop:
     sta obstacle2_type
     sta obstacle3_type
 
+    ; OBSTACLE SCROLL SPEED
+    lda #1
+    sta obstacle_scroll
+
     ; Obstacle y pos on ground
     lda p1_min_y
+    clc
+    adc #8
     sta oam + 88
     ; Set sprite tile
     lda #1
@@ -745,19 +754,21 @@ mainloop:
     lda gamepad
     and #PAD_U
     ; Is up pressed?
-    beq GAMEPAD_UP
+    beq GAMEPAD_NOT_UP
+    ; Jump
     lda #$FF
     sta p1_dy
     
-GAMEPAD_UP:
+GAMEPAD_NOT_UP:
     lda gamepad
     and #PAD_D
     ; Is down pressed?
-    beq GAMEPAD_DOWN
+    beq GAMEPAD_NOT_DOWN
+    ; Fall
     lda #1
     sta p1_dy
 
-GAMEPAD_DOWN:
+GAMEPAD_NOT_DOWN:
     jmp NOT_INPUT
 
 NOT_INPUT:
@@ -887,9 +898,50 @@ MOVE_UP:
     jmp CONTINUE
 
 CONTINUE:
-    ; Object logic
+    ; Calculate next object x pos
+    lda obstacle1_x
+    sec 
+    sbc obstacle_scroll
+    sta obstacle1_x
 
+    lda obstacle2_x
+    sec
+    sbc obstacle_scroll
+    sta obstacle2_x
 
+    lda obstacle3_x
+    sec
+    sbc obstacle_scroll
+    sta obstacle3_x
+
+    ; Obstacle x pos
+    lda obstacle1_x
+    sta oam + 88 + 3
+
+    lda obstacle2_x
+    sta oam + 92 + 3
+
+    lda obstacle3_x
+    sta oam + 96 + 3
+
+    ; If player1 x pos is smaller than obstacle x pos
+    ; And player1 x pos + width (48 (64 while ducking)) is smaller than obstacle x pos
+
+    lda oam + 3
+    cmp obstacle1_x
+    bcs NOT_COLLIDED
+
+    lda obstacle1_x
+    sec
+    sbc #24
+    cmp oam + 3
+    bcs NOT_COLLIDED
+
+COLLIDED:
+    lda #0
+    sta oam + 3
+
+NOT_COLLIDED:
     lda #1
     sta nmi_ready
     jmp mainloop
