@@ -61,6 +61,16 @@ p2_dy: .res 1
 
 jmp_speed: .res 1
 
+; x coordinate of obstacles 1-3
+obstacle1_x: .res 1
+obstacle2_x: .res 1
+obstacle3_x: .res 1
+
+; obstacle type (1 = small cactus, 2 = big cactus, 3 = bird)
+obstacle1_type: .res 1
+obstacle2_type: .res 1
+obstacle3_type: .res 1
+
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
 ;*****************************************************************
@@ -290,9 +300,6 @@ loop:
     sta p1_max_y
     lda #158
     sta p2_max_y
-
-    ; Indices
-
 
     ; Set the sprite attributes
     ; P1__________________________________________________________
@@ -612,6 +619,57 @@ loop:
     lda #72
     sta oam + 84 + 3
     ;P2__________________________________________________________
+    
+    ; OBSTACLE X POS
+    lda #255
+    sta obstacle1_x
+    sta obstacle2_x
+    sta obstacle3_x
+
+    ; OBSTACLE TYPE
+    lda #1
+    sta obstacle1_type
+    sta obstacle2_type
+    sta obstacle3_type
+
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sta oam + 88
+    ; Set sprite tile
+    lda #1
+    sta oam + 88 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 88 + 2
+    ; Obstacle x pos
+    lda obstacle1_x
+    sta oam + 88 + 3
+
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sta oam + 92
+    ; Set sprite tile
+    lda #0
+    sta oam + 92 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 92 + 2
+    ; Obstacle x pos
+    lda obstacle2_x
+    sta oam + 92 + 3
+
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sta oam + 96
+    ; Set sprite tile
+    lda #0
+    sta oam + 96 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 96 + 2
+    ; Obstacle x pos
+    lda obstacle3_x
+    sta oam + 96 + 3
 .endproc
 
 ;***************************************************************
