@@ -636,7 +636,7 @@ loop:
     sta obstacle3_type
 
     ; OBSTACLE SCROLL SPEED
-    lda #1
+    lda #2
     sta obstacle_scroll
 
     ; Obstacle y pos on ground
@@ -927,14 +927,28 @@ CONTINUE:
     ; If player1 x pos is smaller than obstacle x pos
     ; And player1 x pos + width (48 (64 while ducking)) is smaller than obstacle x pos
 
+    ; If player1 x pos is smaller than obstacle x pos
     lda oam + 3
     cmp obstacle1_x
     bcs NOT_COLLIDED
 
+    ; If obstacle x pos is smaller than player1 x pos + width
     lda obstacle1_x
     sec
     sbc #24
     cmp oam + 3
+    bcs NOT_COLLIDED
+
+    ; If player1 y pos is smaller than obstacle y pos
+    lda oam
+    cmp oam + 88
+    bcs NOT_COLLIDED
+
+    ; If obstacle y pos is smaller than player1 y pos + height
+    lda oam + 88
+    sec
+    sbc #24
+    cmp oam
     bcs NOT_COLLIDED
 
 COLLIDED:
