@@ -50,6 +50,30 @@ p2_dy: .res 1
 
 jmp_speed: .res 1
 
+; x coordinate of camera
+camera_x: .res 1
+current_nametable: .res 1
+
+; time variables
+time: .res 2
+lasttime: .res 1
+
+p1_duck: .res 1
+p2_duck: .res 2
+
+; Obstacle x pos
+obstacle1_x: .res 1
+obstacle2_x: .res 1
+obstacle3_x: .res 1
+
+; Obstacle type (1 = small cactus, 2 = big cactus, 3 = bird)
+obstacle1_type: .res 1
+obstacle2_type: .res 1
+obstacle3_type: .res 1
+
+; Obstacle scroll speed
+obstacle_scroll: .res 1
+
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
 ;*****************************************************************
@@ -351,6 +375,14 @@ rti
 
 .endproc
 
+
+;***************************************************************
+; gamepad_poll: this reads the gamepad state into the variable
+; labeled "gamepad".
+; This only reads the first gamepad, and also if DPCM samples
+; are played they can conflict with gamepad reading,
+; which may give incorrect results.
+;***************************************************************
 .segment "CODE"
 .proc gamepad_poll
     lda #1
@@ -358,7 +390,7 @@ rti
     lda #0
     sta JOYPAD1
     ldx #8
-loop:
+    loop:
         pha
         lda JOYPAD1
         and #%00000011
@@ -371,33 +403,6 @@ loop:
     rts
 .endproc
 
-;**************************************************************
-; Main application logic section includes the game loop
-;**************************************************************
-.segment "CODE"
-.proc main
-    ldx #0
-paletteloop:
-        lda default_palette, x
-        sta palette, x
-        inx
-        cpx #32
-        bcc paletteloop
-        jsr clear_nametable
-        lda PPU_STATUS
-    lda #$20
-    sta PPU_VRAM_ADDRESS2
-    lda #$8A
-    sta PPU_VRAM_ADDRESS2
-    ldx #0
-textloop:
-        lda welcome_txt, x
-        sta PPU_VRAM_IO
-        inx
-        cmp #0
-        beq :+
-        jmp textloop
-:
 
 ;***************************************************************
 ; init_variables: initialises various values in zero page memory
@@ -877,7 +882,6 @@ GAMEPAD_NOT_UP:
     and #PAD_D
     ; Is down pressed?
     beq GAMEPAD_NOT_DOWN
-    beq GAMEPAD_NOT_DOWN
     ; Fall
     lda #1
     sta p1_dy
@@ -886,10 +890,8 @@ GAMEPAD_NOT_UP:
     jsr player_duck
 
 GAMEPAD_NOT_DOWN:
-    jmp NOT_INPUT
-
-GAMEPAD_NOT_DOWN:
     jsr player_unduck
+    jmp NOT_INPUT
 
 NOT_INPUT:
     ; If dy is 1, add 1 = move down
@@ -1044,7 +1046,7 @@ CONTINUE:
     sta oam + 96 + 3
 
     ; If player1 x pos is smaller than obstacle x pos
-    ; And player1 x pos + width (48 (64 while ducking)) is smaller than obstacle x pos
+    ; And player1 x pos + width (24 (32 while ducking)) is smaller than obstacle x pos
 
     ; If player1 x pos is smaller than obstacle x pos
     lda oam + 3
