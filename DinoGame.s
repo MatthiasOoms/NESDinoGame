@@ -706,44 +706,32 @@ mainloop:
     lda gamepad
     and #PAD_U
     ; Is up pressed?
-    beq GAMEPAD_UP
+    beq GAMEPAD_NOT_UP
+    ; Jump
     lda #$FF
     sta p1_dy
     
-GAMEPAD_UP:
+GAMEPAD_NOT_UP:
     lda gamepad
     and #PAD_D
     ; Is down pressed?
-    beq GAMEPAD_DOWN
+    beq GAMEPAD_NOT_DOWN
     ; duck and change sprite location
-    lda p1_duck
-    cmp #0
-    beq PLAYER_DUCK
-
-PLAYER_DUCK:
     jsr player_duck
 
-GAMEPAD_DOWN:
-    lda gamepad
-    and #PAD_L
-    beq NOT_INPUT  
+    jmp NOT_INPUT
+
+GAMEPAD_NOT_DOWN:
+    jsr player_unduck
 
 NOT_INPUT:
     ; If dy is 1, add 1 = move down
-    ; If dy is 255, subtract 1 = move up
+    ; If dy is 255, subtract 1 = move up    
     lda p1_dy
     cmp #$FF
     beq MOVE_UP
     cmp #1
     beq MOVE_DOWN
-
-    lda p1_duck
-    cmp #1
-    beq PLAYER_UNDUCK
-    jmp CONTINUE
-
-PLAYER_UNDUCK:
-    jsr player_unduck
 
 MOVE_DOWN:
     lda oam
@@ -900,6 +888,10 @@ CONTINUE:
 
 .segment "CODE"
 .proc player_unduck
+    lda p1_duck
+    cmp #0
+    beq RETURN
+
     ; nose tiles
     lda p1_min_y
     ; Set sprite y
@@ -977,5 +969,8 @@ CONTINUE:
 
     lda #0
     sta p1_duck
+    rts
+
+RETURN:
     rts
 .endproc
