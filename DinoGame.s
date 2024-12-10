@@ -818,10 +818,10 @@ titleloop:
     sta seed_0
     lda time+1
     sta seed_0+1
-    jsr rand
+    jsr randomize
     sbc time+1
     sta seed_2
-    jsr rand
+    jsr randomize
     sbc time
     sta seed_2+1
 
@@ -1175,6 +1175,19 @@ RETURN:
 ;**************************************************************
 ; randomizer code
 ;**************************************************************
+.segment "CODE"
+.proc randomize
+    lda seed_0
+    lsr
+    rol seed_0+1
+    BCC @noeor
+    eor #$B4
+@noeor:
+    sta seed_0
+    eor seed_0+1
+    rts
+.endproc
+
 .segment "CODE"
 .proc rand
     jsr rand64k
