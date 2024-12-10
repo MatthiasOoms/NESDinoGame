@@ -167,7 +167,6 @@ rti
         inx
         inx
         bne clear_oam   
-
         ; Wait for the second vblank
     wait_vblank2:
         bit PPU_STATUS
@@ -237,8 +236,6 @@ rti
             ldx #0
             stx nmi_ready
     ppu_update_end:
-
-        jsr horizontal_scrollling
 
         pla
         tay
@@ -789,6 +786,8 @@ jsr init_variables
 jsr display_game_screen
 
 jsr ppu_update
+
+jsr horizontal_scrollling
 
 titleloop:
     jsr gamepad_poll
