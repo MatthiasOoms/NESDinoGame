@@ -54,6 +54,13 @@ jmp_speed: .res 1
 camera_x: .res 1
 current_nametable: .res 1
 
+; time variables
+time: .res 2
+lasttime: .res 1
+
+p1_duck: .res 1
+p2_duck: .res 2
+
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
 ;*****************************************************************
@@ -176,6 +183,12 @@ rti
     pha
     tya
     pha
+
+    ; increment time tick counter
+    inc time
+    bne :+
+            inc time+1
+    :
 
     ; Do we need to render
     lda nmi_ready
@@ -401,6 +414,11 @@ rti
     sta p1_dy
     sta p2_dy
 
+    ; DUCK BOOLS
+    lda #0
+    sta p1_duck
+    sta p2_duck
+
     ; MAX JUMP HEIGHTS
     lda #32
     sta p1_max_y
@@ -423,6 +441,7 @@ rti
     sta oam + 3
 
     lda p1_min_y
+    lda p1_min_y
     ; Set sprite y
     sta oam + 4
     ; Set sprite tile
@@ -433,8 +452,12 @@ rti
     sta oam + 4 + 2
     ; Set sprite x
     lda #56
+    lda #56
     sta oam + 4 + 3
 
+    lda p1_min_y
+    sec
+    sbc #8
     lda p1_min_y
     sec
     sbc #8
@@ -770,6 +793,11 @@ mainloop:
     cmp #0
     bne mainloop
 
+    lda time
+    cmp lasttime
+    beq mainloop
+    sta lasttime
+
     ; Only allow input if the player is on the ground
     lda oam
     cmp p1_min_y
@@ -779,30 +807,32 @@ mainloop:
     lda gamepad
     and #PAD_U
     ; Is up pressed?
-    beq GAMEPAD_UP
+    beq GAMEPAD_NOT_UP
+    ; Jump
     lda #$FF
     sta p1_dy
     
-GAMEPAD_UP:
+GAMEPAD_NOT_UP:
     lda gamepad
     and #PAD_D
     ; Is down pressed?
-    beq GAMEPAD_DOWN
-    lda #1
-    sta p1_dy
+    beq GAMEPAD_NOT_DOWN
+    ; duck and change sprite location
+    jsr player_duck
 
-GAMEPAD_DOWN:
     jmp NOT_INPUT
+
+GAMEPAD_NOT_DOWN:
+    jsr player_unduck
 
 NOT_INPUT:
     ; If dy is 1, add 1 = move down
-    ; If dy is 255, subtract 1 = move up
+    ; If dy is 255, subtract 1 = move up    
     lda p1_dy
     cmp #$FF
     beq MOVE_UP
     cmp #1
     beq MOVE_DOWN
-    jmp CONTINUE
 
 MOVE_DOWN:
     lda oam
@@ -925,6 +955,352 @@ CONTINUE:
     sta nmi_ready
 
     jmp mainloop
+.endproc
 
+;**************************************************************
+; Ducking code and sprite change
+;**************************************************************
+.segment "CODE"
+.proc player_duck
+    ; nose tiles
+    lda p1_min_y
+    ; Set sprite y
+    sta oam + 36
+    ; Set sprite tile
+    lda #1
+    sta oam + 36 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 36 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 36 + 3
 
+    lda p1_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 40
+    ; Set sprite tile
+    lda #1
+    sta oam + 40 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 40 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 40 + 3
+    
+    ; top head removes
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 16
+    ; Set sprite tile
+    lda #0
+    sta oam + 16 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 16 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 16 + 3
+
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 20
+    ; Set sprite tile
+    lda #0
+    sta oam + 20 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 20 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 20 + 3
+    
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 32
+    ; Set sprite tile
+    lda #0
+    sta oam + 32 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 32 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 32 + 3
+
+    lda #1
+    sta p1_duck
+    rts
+.endproc
+
+.segment "CODE"
+.proc player_unduck
+    lda p1_duck
+    cmp #0
+    beq RETURN
+
+    ; nose tiles
+    lda p1_min_y
+    ; Set sprite y
+    sta oam + 36
+    ; Set sprite tile
+    lda #0
+    sta oam + 36 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 36 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 36 + 3
+
+    lda p1_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 40
+    ; Set sprite tile
+    lda #0
+    sta oam + 40 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 40 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 40 + 3
+    
+    ; top head removes
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 16
+    ; Set sprite tile
+    lda #1
+    sta oam + 16 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 16 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 16 + 3
+
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 20
+    ; Set sprite tile
+    lda #1
+    sta oam + 20 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 20 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 20 + 3
+    
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 32
+    ; Set sprite tile
+    lda #1
+    sta oam + 32 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 32 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 32 + 3
+
+    lda #0
+    sta p1_duck
+    rts
+
+RETURN:
+    rts
+.endproc
+
+;**************************************************************
+; Ducking code and sprite change
+;**************************************************************
+.segment "CODE"
+.proc player_duck
+    ; nose tiles
+    lda p1_min_y
+    ; Set sprite y
+    sta oam + 36
+    ; Set sprite tile
+    lda #1
+    sta oam + 36 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 36 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 36 + 3
+
+    lda p1_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 40
+    ; Set sprite tile
+    lda #1
+    sta oam + 40 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 40 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 40 + 3
+    
+    ; top head removes
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 16
+    ; Set sprite tile
+    lda #0
+    sta oam + 16 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 16 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 16 + 3
+
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 20
+    ; Set sprite tile
+    lda #0
+    sta oam + 20 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 20 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 20 + 3
+    
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 32
+    ; Set sprite tile
+    lda #0
+    sta oam + 32 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 32 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 32 + 3
+
+    lda #1
+    sta p1_duck
+    rts
+.endproc
+
+.segment "CODE"
+.proc player_unduck
+    lda p1_duck
+    cmp #0
+    beq RETURN
+
+    ; nose tiles
+    lda p1_min_y
+    ; Set sprite y
+    sta oam + 36
+    ; Set sprite tile
+    lda #0
+    sta oam + 36 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 36 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 36 + 3
+
+    lda p1_min_y
+    sec
+    sbc #8
+    ; Set sprite y
+    sta oam + 40
+    ; Set sprite tile
+    lda #0
+    sta oam + 40 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 40 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 40 + 3
+    
+    ; top head removes
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 16
+    ; Set sprite tile
+    lda #1
+    sta oam + 16 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 16 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 16 + 3
+
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 20
+    ; Set sprite tile
+    lda #1
+    sta oam + 20 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 20 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 20 + 3
+    
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y
+    sta oam + 32
+    ; Set sprite tile
+    lda #1
+    sta oam + 32 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 32 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 32 + 3
+
+    lda #0
+    sta p1_duck
+    rts
+
+RETURN:
+    rts
 .endproc
