@@ -474,7 +474,7 @@ rts
     ; Set sprite y
     sta oam
     ; Set sprite tile
-    lda #105
+    lda #104
     sta oam + 1
     ; Set sprite attributes
     lda #0
@@ -488,10 +488,10 @@ rts
     ; Set sprite y
     sta oam + 4
     ; Set sprite tile
-    lda #106
+    lda #105
     sta oam + 4 + 1
     ; Set sprite attributes
-    lda #$00000011
+    lda #0
     sta oam + 4 + 2
     ; Set sprite x
     lda #56
@@ -537,7 +537,7 @@ rts
     ; Set sprite y
     sta oam + 16
     ; Set sprite tile
-    lda #255
+    lda #0
     sta oam + 16 + 1
     ; Set sprite attributes
     lda #0
@@ -565,7 +565,7 @@ rts
     ; Set sprite y
     sta oam + 24
     ; Set sprite tile
-    lda #255
+    lda #0
     sta oam + 24 + 1
     ; Set sprite attributes
     lda #0
@@ -580,7 +580,7 @@ rts
     ; Set sprite y
     sta oam + 28
     ; Set sprite tile
-    lda #104
+    lda #106
     sta oam + 28 + 1
     ; Set sprite attributes
     lda #0
@@ -608,7 +608,7 @@ rts
     ; Set sprite y
     sta oam + 36
     ; Set sprite tile
-    lda #119
+    lda #0
     sta oam + 36 + 1
     ; Set sprite attributes
     lda #0
@@ -623,7 +623,7 @@ rts
     ; Set sprite y
     sta oam + 40
     ; Set sprite tile
-    lda #117
+    lda #0
     sta oam + 40 + 1
     ; Set sprite attributes
     lda #0
@@ -1346,7 +1346,7 @@ NOT_COLLIDED:
     ; Set sprite y
     sta oam + 36
     ; Set sprite tile
-    lda #117
+    lda #119
     sta oam + 36 + 1
     ; Set sprite attributes
     lda #0
@@ -1463,7 +1463,7 @@ NOT_COLLIDED:
     ; Set sprite y
     sta oam + 16
     ; Set sprite tile
-    lda #117
+    lda #0
     sta oam + 16 + 1
     ; Set sprite attributes
     lda #0
@@ -1478,7 +1478,7 @@ NOT_COLLIDED:
     ; Set sprite y
     sta oam + 20
     ; Set sprite tile
-    lda #117
+    lda #100
     sta oam + 20 + 1
     ; Set sprite attributes
     lda #0
@@ -1493,7 +1493,7 @@ NOT_COLLIDED:
     ; Set sprite y
     sta oam + 32
     ; Set sprite tile
-    lda #117
+    lda #101
     sta oam + 32 + 1
     ; Set sprite attributes
     lda #0
