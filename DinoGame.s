@@ -36,6 +36,8 @@ INES_SRAM = 0
 .segment "ZEROPAGE"
 gamepad: .res 1
 
+is_game_in_main: .res 1
+
 ; randomizer seeds
 seed_0: .res 2
 seed_2: .res 2
@@ -63,7 +65,7 @@ time: .res 2
 lasttime: .res 1
 
 p1_duck: .res 1
-p2_duck: .res 2
+p2_duck: .res 1
 
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
@@ -236,7 +238,20 @@ rti
             ldx #0
             stx nmi_ready
     ppu_update_end:
+        lda is_game_in_main
+        cmp #1
+        beq start_scrolling
 
+        pla
+        tay
+        pla
+        tax
+        pla
+        rti
+
+    start_scrolling:
+    
+        jsr horizontal_scrollling 
         pla
         tay
         pla
@@ -400,6 +415,10 @@ rti
 ;***************************************************************
 .segment "CODE"
 .proc init_variables
+    ; set bool of is in main
+    lda #0
+    sta is_game_in_main
+
     ; Set the jump speed
     lda #3
     sta jmp_speed
@@ -806,7 +825,8 @@ titleloop:
     sbc time
     sta seed_2+1
 
-    jsr player_duck
+    lda #1
+    sta is_game_in_main
 
 mainloop:
 
