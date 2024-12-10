@@ -36,6 +36,10 @@ INES_SRAM = 0
 .segment "ZEROPAGE"
 gamepad: .res 1
 
+; randomizer seeds
+seed_0: .res 2
+seed_2: .res 2
+
 ; Y position of the players
 p1_min_y: .res 1
 p2_min_y: .res 1
@@ -786,6 +790,24 @@ jsr display_game_screen
 
 jsr ppu_update
 
+titleloop:
+    jsr gamepad_poll
+    lda gamepad
+    and #PAD_A|PAD_B|PAD_START|PAD_SELECT
+    beq titleloop
+
+    lda time
+    sta seed_0
+    lda time+1
+    sta seed_0+1
+    jsr rand
+    sbc time+1
+    sta seed_2
+    jsr rand
+    sbc time
+    sta seed_2+1
+
+    jsr player_duck
 
 mainloop:
 
@@ -953,7 +975,7 @@ MOVE_UP:
 CONTINUE:
     lda #1
     sta nmi_ready
-
+    ;jsr horizontal_scrollling
     jmp mainloop
 .endproc
 
@@ -1128,5 +1150,49 @@ CONTINUE:
     rts
 
 RETURN:
+    rts
+.endproc
+
+;**************************************************************
+; randomizer code
+;**************************************************************
+.segment "CODE"
+.proc rand
+    jsr rand64k
+    jsr rand32k
+    lda seed_0+1
+    eor seed_2+1
+    tay
+    lda seed_0
+    eor seed_2
+    rts
+.endproc
+
+.segment "CODE"
+.proc rand64k
+    lda seed_0+1
+    asl
+    asl 
+    eor seed_0+1
+    asl
+    eor seed_0+1
+    asl
+    asl
+    eor seed_0+1
+    asl
+    rol seed_0
+    rol seed_0+1
+    rts
+.endproc
+
+.segment "CODE"
+.proc rand32k
+    lda seed_2+1
+    asl
+    eor seed_2+1
+    asl
+    asl
+    ror seed_2
+    rol seed_2+1
     rts
 .endproc
