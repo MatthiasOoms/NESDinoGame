@@ -50,17 +50,6 @@ p2_dy: .res 1
 
 jmp_speed: .res 1
 
-; x coordinate of camera
-camera_x: .res 1
-current_nametable: .res 1
-
-; time variables
-time: .res 2
-lasttime: .res 1
-
-p1_duck: .res 1
-p2_duck: .res 2
-
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
 ;*****************************************************************
@@ -360,19 +349,8 @@ rti
     vram_set_address (NAME_TABLE_1_ADDRESS + 28 * 32)
     jsr draw_horizon_two
 
-
-
-
 .endproc
 
-
-;***************************************************************
-; gamepad_poll: this reads the gamepad state into the variable
-; labeled "gamepad".
-; This only reads the first gamepad, and also if DPCM samples
-; are played they can conflict with gamepad reading,
-; which may give incorrect results.
-;***************************************************************
 .segment "CODE"
 .proc gamepad_poll
     lda #1
@@ -380,7 +358,7 @@ rti
     lda #0
     sta JOYPAD1
     ldx #8
-    loop:
+loop:
         pha
         lda JOYPAD1
         and #%00000011
@@ -393,6 +371,33 @@ rti
     rts
 .endproc
 
+;**************************************************************
+; Main application logic section includes the game loop
+;**************************************************************
+.segment "CODE"
+.proc main
+    ldx #0
+paletteloop:
+        lda default_palette, x
+        sta palette, x
+        inx
+        cpx #32
+        bcc paletteloop
+        jsr clear_nametable
+        lda PPU_STATUS
+    lda #$20
+    sta PPU_VRAM_ADDRESS2
+    lda #$8A
+    sta PPU_VRAM_ADDRESS2
+    ldx #0
+textloop:
+        lda welcome_txt, x
+        sta PPU_VRAM_IO
+        inx
+        cmp #0
+        beq :+
+        jmp textloop
+:
 
 ;***************************************************************
 ; init_variables: initialises various values in zero page memory
@@ -755,7 +760,62 @@ rti
     ldx #$00
     stx current_nametable
 
-    
+     ; OBSTACLE X POS
+    lda #255
+    sta obstacle1_x
+    sta obstacle2_x
+    sta obstacle3_x
+
+    ; OBSTACLE TYPE
+    lda #1
+    sta obstacle1_type
+    sta obstacle2_type
+    sta obstacle3_type
+
+    ; OBSTACLE SCROLL SPEED
+    lda #2
+    sta obstacle_scroll
+
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    clc
+    adc #8
+    sta oam + 88
+    ; Set sprite tile
+    lda #1
+    sta oam + 88 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 88 + 2
+    ; Obstacle x pos
+    lda obstacle1_x
+    sta oam + 88 + 3
+
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sta oam + 92
+    ; Set sprite tile
+    lda #0
+    sta oam + 92 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 92 + 2
+    ; Obstacle x pos
+    lda obstacle2_x
+    sta oam + 92 + 3
+
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sta oam + 96
+    ; Set sprite tile
+    lda #0
+    sta oam + 96 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 96 + 2
+    ; Obstacle x pos
+    lda obstacle3_x
+    sta oam + 96 + 3
 
     rts
 .endproc
@@ -817,9 +877,15 @@ GAMEPAD_NOT_UP:
     and #PAD_D
     ; Is down pressed?
     beq GAMEPAD_NOT_DOWN
+    beq GAMEPAD_NOT_DOWN
+    ; Fall
+    lda #1
+    sta p1_dy
+
     ; duck and change sprite location
     jsr player_duck
 
+GAMEPAD_NOT_DOWN:
     jmp NOT_INPUT
 
 GAMEPAD_NOT_DOWN:
@@ -951,6 +1017,64 @@ MOVE_UP:
     jmp CONTINUE
 
 CONTINUE:
+    ; Calculate next object x pos
+    lda obstacle1_x
+    sec 
+    sbc obstacle_scroll
+    sta obstacle1_x
+
+    lda obstacle2_x
+    sec
+    sbc obstacle_scroll
+    sta obstacle2_x
+
+    lda obstacle3_x
+    sec
+    sbc obstacle_scroll
+    sta obstacle3_x
+
+    ; Obstacle x pos
+    lda obstacle1_x
+    sta oam + 88 + 3
+
+    lda obstacle2_x
+    sta oam + 92 + 3
+
+    lda obstacle3_x
+    sta oam + 96 + 3
+
+    ; If player1 x pos is smaller than obstacle x pos
+    ; And player1 x pos + width (48 (64 while ducking)) is smaller than obstacle x pos
+
+    ; If player1 x pos is smaller than obstacle x pos
+    lda oam + 3
+    cmp obstacle1_x
+    bcs NOT_COLLIDED
+
+    ; If obstacle x pos is smaller than player1 x pos + width
+    lda obstacle1_x
+    sec
+    sbc #24
+    cmp oam + 3
+    bcs NOT_COLLIDED
+
+    ; If player1 y pos is smaller than obstacle y pos
+    lda oam
+    cmp oam + 88
+    bcs NOT_COLLIDED
+
+    ; If obstacle y pos is smaller than player1 y pos + height
+    lda oam + 88
+    sec
+    sbc #24
+    cmp oam
+    bcs NOT_COLLIDED
+
+COLLIDED:
+    lda #0
+    sta oam + 3
+
+NOT_COLLIDED:
     lda #1
     sta nmi_ready
 
