@@ -804,7 +804,7 @@ rts
     lda #0
     sta oam + 192 + 2
     ; Set sprite x
-    lda #25 * 8
+    lda #22 * 8
     sta oam + 192 + 3
 
     ;i
@@ -818,7 +818,7 @@ rts
     lda #0
     sta oam + 196 + 2
     ; Set sprite x
-    lda #26 * 8
+    lda #23 * 8
     sta oam + 196 + 3
 
     ;s
@@ -832,7 +832,7 @@ rts
     lda #0
     sta oam + 200 + 2
     ; Set sprite x
-    lda #27 * 8
+    lda #24 * 8
     sta oam + 200 + 3
 
     ;c
@@ -846,7 +846,7 @@ rts
     lda #0
     sta oam + 204 + 2
     ; Set sprite x
-    lda #28 * 8
+    lda #25 * 8
     sta oam + 204 + 3
 
 
@@ -861,7 +861,7 @@ rts
     lda #0
     sta oam + 208 + 2
     ; Set sprite x
-    lda #29 * 8
+    lda #26 * 8
     sta oam + 208 + 3
 
     ;r
@@ -875,7 +875,7 @@ rts
     lda #0
     sta oam + 212 + 2
     ; Set sprite x
-    lda #30 * 8
+    lda #27 * 8
     sta oam + 212 + 3
 
     ;e
@@ -889,7 +889,7 @@ rts
     lda #0
     sta oam + 216 + 2
     ; Set sprite x
-    lda #31 * 8
+    lda #28 * 8
     sta oam + 216 + 3
 
 
@@ -904,7 +904,7 @@ rts
     lda #0
     sta oam + 220 + 2
     ; Set sprite x
-    lda #24 * 8
+    lda #21 * 8
     sta oam + 220 + 3
     
     ;0 two
@@ -918,7 +918,7 @@ rts
     lda #0
     sta oam + 224 + 2
     ; Set sprite x
-    lda #25 * 8
+    lda #22 * 8
     sta oam + 224 + 3
 
     ;0 three
@@ -932,7 +932,7 @@ rts
     lda #0
     sta oam + 228 + 2
     ; Set sprite x
-    lda #26 * 8
+    lda #23 * 8
     sta oam + 228 + 3
 
     ;0 four
@@ -946,7 +946,7 @@ rts
     lda #0
     sta oam + 232 + 2
     ; Set sprite x
-    lda #27 * 8
+    lda #24 * 8
     sta oam + 232 + 3
 
     ;0 five
@@ -960,9 +960,8 @@ rts
     lda #0
     sta oam + 236 + 2
     ; Set sprite x
-    lda #28 * 8
+    lda #25 * 8
     sta oam + 236 + 3
-
 
     ;0 six
     lda #8
@@ -975,7 +974,7 @@ rts
     lda #0
     sta oam + 240 + 2
     ; Set sprite x
-    lda #29 * 8
+    lda #26 * 8
     sta oam + 240 + 3
 
     ;0 seven
@@ -989,7 +988,7 @@ rts
     lda #0
     sta oam + 244 + 2
     ; Set sprite x
-    lda #30 * 8
+    lda #27 * 8
     sta oam + 244 + 3
 
     ;0 eight
@@ -1003,7 +1002,7 @@ rts
     lda #0
     sta oam + 248 + 2
     ; Set sprite x
-    lda #31 * 8
+    lda #28 * 8
     sta oam + 248 + 3
 
     ;highscore__________________________________________________________
