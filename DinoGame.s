@@ -108,10 +108,18 @@ default_palette:
 
 
 horizon_line_one:
-.byte 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75
+.byte 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 255
+
+horizon_subline_one:
+.byte 0, 0, 0, 0, 76, 0, 0, 77, 76, 0, 0, 0, 0, 0, 0, 80, 76, 77, 0, 0, 0, 0, 0, 0, 80, 81, 77, 0, 0, 0, 81, 76, 0, 255
 
 horizon_line_two:
 .byte 75, 75, 75, 75, 75, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75
+
+horizon_subline_two:
+.byte 26, 0, 0, 0, 76, 0, 0, 77, 76, 0, 0, 0, 0, 0, 0, 80, 76, 77, 0, 0, 0, 0, 0, 0, 80, 81, 77, 0, 0, 0, 81, 76, 0, 255
+
+
 
 game_title_text:
 .byte 3, 8, 18, 15, 13, 5, 0, 4, 9, 14, 15, 0, 7, 1, 13, 5, 255
@@ -323,8 +331,12 @@ rti
          ldx 0
          stx camera_x
 
+
+        ; check if nametable needs switching
+        ; TODO randomly generate new horizon and dirt line for the new table
          ldx current_nametable
          cpx #$00
+
          bne firsttable
             ldx #$01
             stx current_nametable
@@ -341,51 +353,6 @@ rti
 .endproc
 
 
-
-;***************************************************************
-; draw horizon line
-;***************************************************************
-.segment "CODE"
-.proc draw_horizon_one
-
-    ;reset address latch
-    lda PPU_STATUS
-
-    ;iterate over the horizon line
-    ldx #0
-    loop:
-        lda horizon_line_one, x
-        sta PPU_VRAM_IO
-        inx
-        cpx #32
-        beq :+ 
-        jmp loop
-
-    :
-    rts
-.endproc
-
-.segment "CODE"
-.proc draw_horizon_two
-
-    ;reset address latch
-    lda PPU_STATUS
-
-    ;iterate over the horizon line
-    ldx #0
-    loop:
-        lda horizon_line_two, x
-        sta PPU_VRAM_IO
-        inx
-        cpx #32
-        beq :+ 
-        jmp loop
-
-    :
-    rts
-.endproc
-
-
 ;***************************************************************
 ; display game screen
 ;***************************************************************
@@ -393,16 +360,39 @@ rti
 .proc display_start_game_screen
 
     vram_set_address (NAME_TABLE_0_ADDRESS + 12 * 32)
-    jsr draw_horizon_one
+	assign_address_to_ram text_address, horizon_line_one
+	jsr write_text
+
+    vram_set_address (NAME_TABLE_0_ADDRESS + 13 * 32)
+	assign_address_to_ram text_address, horizon_subline_one
+	jsr write_text
 
     vram_set_address (NAME_TABLE_0_ADDRESS + 28 * 32)
-    jsr draw_horizon_one
+	assign_address_to_ram text_address, horizon_line_one
+	jsr write_text
+
+    vram_set_address (NAME_TABLE_0_ADDRESS + 29 * 32)
+	assign_address_to_ram text_address, horizon_subline_one
+	jsr write_text
+
+
 
     vram_set_address (NAME_TABLE_1_ADDRESS + 12 * 32)
-    jsr draw_horizon_two
+	assign_address_to_ram text_address, horizon_line_two
+	jsr write_text
+
+    vram_set_address (NAME_TABLE_1_ADDRESS + 13 * 32)
+	assign_address_to_ram text_address, horizon_subline_two
+	jsr write_text
 
     vram_set_address (NAME_TABLE_1_ADDRESS + 28 * 32)
-    jsr draw_horizon_two
+	assign_address_to_ram text_address, horizon_line_two
+	jsr write_text
+
+    vram_set_address (NAME_TABLE_1_ADDRESS + 29 * 32)
+	assign_address_to_ram text_address, horizon_subline_two
+	jsr write_text
+
 
     ; Write our game title text
 	vram_set_address (NAME_TABLE_0_ADDRESS + 2)
@@ -419,8 +409,6 @@ rti
 	vram_set_address (NAME_TABLE_0_ADDRESS + 2 * 32 + 2)
 	assign_address_to_ram text_address, yenzo_name_text
 	jsr write_text
-
-
 
     ; Write matt name
 	vram_set_address (NAME_TABLE_0_ADDRESS + 3 * 32 + 2)
@@ -484,8 +472,8 @@ rts
 .segment "CODE"
 .proc update_score
 
-; 27 is 0 in the charset
-; 36 is 9 in the charset
+    ; 27 is 0 in the charset
+    ; 36 is 9 in the charset
 
     ldx #248 + 1
 

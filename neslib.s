@@ -202,6 +202,7 @@ exit:
     lda #0
 	ldy #32
 loop:
+    cpy #0
 	beq exit ; exit if equal to 0
 	sta PPU_VRAM_IO
 	dey
