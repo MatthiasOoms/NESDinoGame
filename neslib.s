@@ -179,10 +179,32 @@ text_address:	.res 2
 .proc write_text
 	ldy #0
 loop:
-	lda (text_address),y 
-	beq exit ; exit if 0
+	lda (text_address), y 
+    cmp #255
+	beq exit ; exit if equal to 255
 	sta PPU_VRAM_IO
 	iny
+	jmp loop
+exit:
+	rts
+.endproc
+
+
+;*****************************************************************
+; make this part of background blank
+; set ppu address before calling this function
+;*****************************************************************
+
+
+.segment "CODE"
+.proc clear_background_line
+    
+    lda #0
+	ldy #32
+loop:
+	beq exit ; exit if equal to 0
+	sta PPU_VRAM_IO
+	dey
 	jmp loop
 exit:
 	rts

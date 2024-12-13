@@ -113,6 +113,22 @@ horizon_line_one:
 horizon_line_two:
 .byte 75, 75, 75, 75, 75, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75
 
+game_title_text:
+.byte 3, 8, 18, 15, 13, 5, 0, 4, 9, 14, 15, 0, 7, 1, 13, 5, 255
+
+by_text:
+.byte 2, 25, 255
+
+matt_name_text:
+.byte 13, 1, 20, 20, 8, 9, 1, 19, 0, 15, 15, 13, 19, 255
+
+yenzo_name_text:
+.byte 25, 5, 14, 26, 15, 0, 4, 5, 22, 15, 19, 255
+
+hades_name_text:
+.byte 8, 1, 4, 5, 19, 0, 19, 16, 5, 18, 1, 14, 19, 11, 1, 25, 1, 255
+
+
 
 
 ;*****************************************************************
@@ -374,7 +390,7 @@ rti
 ; display game screen
 ;***************************************************************
 .segment "CODE"
-.proc display_game_screen
+.proc display_start_game_screen
 
     vram_set_address (NAME_TABLE_0_ADDRESS + 12 * 32)
     jsr draw_horizon_one
@@ -388,9 +404,78 @@ rti
     vram_set_address (NAME_TABLE_1_ADDRESS + 28 * 32)
     jsr draw_horizon_two
 
+    ; Write our game title text
+	vram_set_address (NAME_TABLE_0_ADDRESS + 2)
+	assign_address_to_ram text_address, game_title_text
+	jsr write_text
+
+    ; Write by text
+	vram_set_address (NAME_TABLE_0_ADDRESS + 32 + 2)
+	assign_address_to_ram text_address, by_text
+	jsr write_text
+
+    
+    ; Write yenzo name
+	vram_set_address (NAME_TABLE_0_ADDRESS + 2 * 32 + 2)
+	assign_address_to_ram text_address, yenzo_name_text
+	jsr write_text
+
+
+
+    ; Write matt name
+	vram_set_address (NAME_TABLE_0_ADDRESS + 3 * 32 + 2)
+	assign_address_to_ram text_address, matt_name_text
+	jsr write_text
+
+
+
+    ; Write hades name
+	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32 + 2)
+	assign_address_to_ram text_address, hades_name_text
+	jsr write_text
+
+
 
 rts
 .endproc
+
+;***************************************************************
+; display game screen
+;***************************************************************
+.segment "CODE"
+.proc clear_name_texts
+
+    ; clear our game title text
+	vram_set_address (NAME_TABLE_0_ADDRESS)
+	jsr clear_background_line
+
+
+    ; clear by text
+	vram_set_address (NAME_TABLE_0_ADDRESS + 1 * 32)
+	jsr clear_background_line
+
+    
+    ; clear yenzo name
+	vram_set_address (NAME_TABLE_0_ADDRESS + 2 * 32)
+	jsr clear_background_line
+
+
+
+    ; clear matt name
+	vram_set_address (NAME_TABLE_0_ADDRESS + 3 * 32)
+	jsr clear_background_line
+
+
+
+    ; clear hades name
+	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32)
+	jsr clear_background_line
+
+    rts
+
+
+.endproc
+
 
 
 ;***************************************************************
@@ -1115,10 +1200,11 @@ paletteloop:
 
 jsr init_variables
 
-jsr display_game_screen
+jsr display_start_game_screen
 
 jsr ppu_update
 
+;this makes the screen display correctly, for some reason it does not do it correctly otherwise
 jsr horizontal_scrollling
 
 titleloop:
@@ -1140,6 +1226,15 @@ titleloop:
 
     lda #1
     sta is_game_in_main
+
+    ; clear name texts when nmi is ready
+    waittoclearloop:
+    lda nmi_ready
+    cmp #0
+    bne waittoclearloop
+    jsr clear_name_texts
+
+
 
 mainloop:
 
