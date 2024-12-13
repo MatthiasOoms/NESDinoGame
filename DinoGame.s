@@ -59,6 +59,8 @@ jmp_speed: .res 1
 ; x coordinate of camera
 camera_x: .res 1
 current_nametable: .res 1
+global_speed: .res 1
+placeholder: .res 1
 
 ; time variables
 time: .res 2
@@ -79,6 +81,7 @@ obstacle3_type: .res 1
 
 ; Obstacle scroll speed
 obstacle_scroll: .res 1
+
 
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
@@ -320,31 +323,29 @@ rti
          lda #00
          sta PPU_VRAM_ADDRESS1
 
-         ldx camera_x
-         inx
-         stx camera_x
+         lda camera_x
+         clc
+         adc global_speed
+         sta camera_x
 
-    	
-         cpx 255
-         bne ending
-
-         ldx 0
-         stx camera_x
-
+         bcc ending
 
         ; check if nametable needs switching
-        ; TODO randomly generate new horizon and dirt line for the new table
-         ldx current_nametable
-         cpx #$00
+         lda current_nametable
+         cmp #0
 
          bne firsttable
-            ldx #$01
-            stx current_nametable
+            lda #1
+            sta current_nametable
             jmp ending
 
         firsttable:
-            ldx #$00
-            stx current_nametable
+            lda #0
+            sta current_nametable
+            ;increase game speed every two nametable renderings
+            ldx global_speed
+            inx
+            stx global_speed
             jmp ending
 
 
@@ -475,23 +476,38 @@ rts
     ; 27 is 0 in the charset
     ; 36 is 9 in the charset
 
-    ldx #248 + 1
+    lda global_speed
+    sta placeholder
 
     loop:
+    ;right most score char plus the index for the used tile
+    ldx #248 + 1
+
+    subloop:
+    ;if it is not a nine yet, simply increment this number
     ldy oam, X
     cpy #36
-    bne ending
-
+    bne incrementchar
+    ;if it is a nine, set it to zero
     lda #27
     sta oam, X
-    sec
+    ;shift the accumulator to work with the next score character by subtracting four
     txa
+    sec
     sbc #4
     tax
-    jmp loop
+    ;go check if the new score character is a zero or not
+    jmp subloop
 
-    ending:
+    ;increment the tile used to the next value
+    incrementchar:
     inc oam, X
+
+    ldx placeholder
+    dex
+    stx placeholder
+    cpx #0
+    bne loop
 
     rts
 
@@ -1162,6 +1178,11 @@ rts
     ; Obstacle x pos
     lda obstacle3_x
     sta oam + 96 + 3
+
+
+
+    lda #1
+    sta global_speed
 
     rts
 .endproc
