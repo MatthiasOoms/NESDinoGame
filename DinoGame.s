@@ -67,6 +67,19 @@ lasttime: .res 1
 p1_duck: .res 1
 p2_duck: .res 1
 
+; Obstacle x pos
+obstacle1_x: .res 1
+obstacle2_x: .res 1
+obstacle3_x: .res 1
+
+; Obstacle type (1 = small cactus, 2 = big cactus, 3 = bird)
+obstacle1_type: .res 1
+obstacle2_type: .res 1
+obstacle3_type: .res 1
+
+; Obstacle scroll speed
+obstacle_scroll: .res 1
+
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
 ;*****************************************************************
@@ -99,6 +112,8 @@ horizon_line_one:
 
 horizon_line_two:
 .byte 75, 75, 75, 75, 75, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75
+
+
 
 ;*****************************************************************
 ; Import both the background and sprite character sets
@@ -266,7 +281,6 @@ rti
 .segment "CODE"
 .proc horizontal_scrollling
 
-
     ; reset address latch
          lda PPU_STATUS
 
@@ -307,8 +321,6 @@ rti
 
 
         ending:
-
-
     rts
 .endproc
 
@@ -377,7 +389,38 @@ rti
     jsr draw_horizon_two
 
 
+rts
+.endproc
 
+
+;***************************************************************
+; update score
+;***************************************************************
+.segment "CODE"
+.proc update_score
+
+; 27 is 0 in the charset
+; 36 is 9 in the charset
+
+    ldx #248 + 1
+
+    loop:
+    ldy oam, X
+    cpy #36
+    bne ending
+
+    lda #27
+    sta oam, X
+    sec
+    txa
+    sbc #4
+    tax
+    jmp loop
+
+    ending:
+    inc oam, X
+
+    rts
 
 .endproc
 
@@ -451,7 +494,7 @@ rti
     ; Set sprite y
     sta oam
     ; Set sprite tile
-    lda #105
+    lda #104
     sta oam + 1
     ; Set sprite attributes
     lda #0
@@ -465,10 +508,10 @@ rti
     ; Set sprite y
     sta oam + 4
     ; Set sprite tile
-    lda #106
+    lda #105
     sta oam + 4 + 1
     ; Set sprite attributes
-    lda #$00000011
+    lda #0
     sta oam + 4 + 2
     ; Set sprite x
     lda #56
@@ -514,7 +557,7 @@ rti
     ; Set sprite y
     sta oam + 16
     ; Set sprite tile
-    lda #255
+    lda #0
     sta oam + 16 + 1
     ; Set sprite attributes
     lda #0
@@ -542,7 +585,7 @@ rti
     ; Set sprite y
     sta oam + 24
     ; Set sprite tile
-    lda #255
+    lda #0
     sta oam + 24 + 1
     ; Set sprite attributes
     lda #0
@@ -557,7 +600,7 @@ rti
     ; Set sprite y
     sta oam + 28
     ; Set sprite tile
-    lda #104
+    lda #106
     sta oam + 28 + 1
     ; Set sprite attributes
     lda #0
@@ -585,7 +628,7 @@ rti
     ; Set sprite y
     sta oam + 36
     ; Set sprite tile
-    lda #119
+    lda #0
     sta oam + 36 + 1
     ; Set sprite attributes
     lda #0
@@ -600,7 +643,7 @@ rti
     ; Set sprite y
     sta oam + 40
     ; Set sprite tile
-    lda #117
+    lda #0
     sta oam + 40 + 1
     ; Set sprite attributes
     lda #0
@@ -769,13 +812,283 @@ rti
     sta oam + 84 + 3
     ;P2__________________________________________________________
 
+  ; highscore__________________________________________________________
+    ;h
+    lda 0
+    ; Set sprite y
+    sta oam + 192
+    ; Set sprite tile
+    lda #8
+    sta oam + 192 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 192 + 2
+    ; Set sprite x
+    lda #22 * 8
+    sta oam + 192 + 3
+
+    ;i
+    lda 0
+    ; Set sprite y
+    sta oam + 196
+    ; Set sprite tile
+    lda #9
+    sta oam + 196 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 196 + 2
+    ; Set sprite x
+    lda #23 * 8
+    sta oam + 196 + 3
+
+    ;s
+    lda 0
+    ; Set sprite y
+    sta oam + 200
+    ; Set sprite tile
+    lda #19
+    sta oam + 200 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 200 + 2
+    ; Set sprite x
+    lda #24 * 8
+    sta oam + 200 + 3
+
+    ;c
+    lda 0
+    ; Set sprite y
+    sta oam + 204
+    ; Set sprite tile
+    lda #3
+    sta oam + 204 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 204 + 2
+    ; Set sprite x
+    lda #25 * 8
+    sta oam + 204 + 3
+
+
+    ;0
+    lda 0
+    ; Set sprite y
+    sta oam + 208
+    ; Set sprite tile
+    lda #15
+    sta oam + 208 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 208 + 2
+    ; Set sprite x
+    lda #26 * 8
+    sta oam + 208 + 3
+
+    ;r
+    lda 0
+    ; Set sprite y
+    sta oam + 212
+    ; Set sprite tile
+    lda #18
+    sta oam + 212 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 212 + 2
+    ; Set sprite x
+    lda #27 * 8
+    sta oam + 212 + 3
+
+    ;e
+    lda 0
+    ; Set sprite y
+    sta oam + 216
+    ; Set sprite tile
+    lda #5
+    sta oam + 216 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 216 + 2
+    ; Set sprite x
+    lda #28 * 8
+    sta oam + 216 + 3
+
+
+    ;0 one
+    lda #8
+    ; Set sprite y
+    sta oam + 220
+    ; Set sprite tile
+    lda #27
+    sta oam + 220 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 220 + 2
+    ; Set sprite x
+    lda #21 * 8
+    sta oam + 220 + 3
+    
+    ;0 two
+    lda #8
+    ; Set sprite y
+    sta oam + 224
+    ; Set sprite tile
+    lda #27
+    sta oam + 224 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 224 + 2
+    ; Set sprite x
+    lda #22 * 8
+    sta oam + 224 + 3
+
+    ;0 three
+    lda #8
+    ; Set sprite y
+    sta oam + 228
+    ; Set sprite tile
+    lda #27
+    sta oam + 228 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 228 + 2
+    ; Set sprite x
+    lda #23 * 8
+    sta oam + 228 + 3
+
+    ;0 four
+    lda #8
+    ; Set sprite y
+    sta oam + 232
+    ; Set sprite tile
+    lda #27
+    sta oam + 232 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 232 + 2
+    ; Set sprite x
+    lda #24 * 8
+    sta oam + 232 + 3
+
+    ;0 five
+    lda #8
+    ; Set sprite y
+    sta oam + 236
+    ; Set sprite tile
+    lda #27
+    sta oam + 236 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 236 + 2
+    ; Set sprite x
+    lda #25 * 8
+    sta oam + 236 + 3
+
+    ;0 six
+    lda #8
+    ; Set sprite y
+    sta oam + 240
+    ; Set sprite tile
+    lda #27
+    sta oam + 240 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 240 + 2
+    ; Set sprite x
+    lda #26 * 8
+    sta oam + 240 + 3
+
+    ;0 seven
+    lda #8
+    ; Set sprite y
+    sta oam + 244
+    ; Set sprite tile
+    lda #27
+    sta oam + 244 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 244 + 2
+    ; Set sprite x
+    lda #27 * 8
+    sta oam + 244 + 3
+
+    ;0 eight
+    lda #8
+    ; Set sprite y
+    sta oam + 248
+    ; Set sprite tile
+    lda #27
+    sta oam + 248 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 248 + 2
+    ; Set sprite x
+    lda #28 * 8
+    sta oam + 248 + 3
+
+    ;highscore__________________________________________________________
+
+
+
     ; set initial x scroll value as zero
     ldx #0
     stx camera_x
     ldx #$00
     stx current_nametable
 
-    
+     ; OBSTACLE X POS
+    lda #255
+    sta obstacle1_x
+    sta obstacle2_x
+    sta obstacle3_x
+
+    ; OBSTACLE TYPE
+    lda #1
+    sta obstacle1_type
+    sta obstacle2_type
+    sta obstacle3_type
+
+    ; OBSTACLE SCROLL SPEED
+    lda #2
+    sta obstacle_scroll
+
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sta oam + 88
+    ; Set sprite tile
+    lda #1
+    sta oam + 88 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 88 + 2
+    ; Obstacle x pos
+    lda obstacle1_x
+    sta oam + 88 + 3
+
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sta oam + 92
+    ; Set sprite tile
+    lda #0
+    sta oam + 92 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 92 + 2
+    ; Obstacle x pos
+    lda obstacle2_x
+    sta oam + 92 + 3
+
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sta oam + 96
+    ; Set sprite tile
+    lda #0
+    sta oam + 96 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 96 + 2
+    ; Obstacle x pos
+    lda obstacle3_x
+    sta oam + 96 + 3
 
     rts
 .endproc
@@ -839,6 +1152,9 @@ mainloop:
     beq mainloop
     sta lasttime
 
+    jsr update_score
+
+
     ; Only allow input if the player is on the ground
     lda oam
     cmp p1_min_y
@@ -858,9 +1174,12 @@ GAMEPAD_NOT_UP:
     and #PAD_D
     ; Is down pressed?
     beq GAMEPAD_NOT_DOWN
+    ; Fall
+    lda #1
+    sta p1_dy
+
     ; duck and change sprite location
     jsr player_duck
-
     jmp NOT_INPUT
 
 GAMEPAD_NOT_DOWN:
@@ -992,9 +1311,68 @@ MOVE_UP:
     jmp CONTINUE
 
 CONTINUE:
+    ; Calculate next object x pos
+    lda obstacle1_x
+    sec 
+    sbc obstacle_scroll
+    sta obstacle1_x
+
+    lda obstacle2_x
+    sec
+    sbc obstacle_scroll
+    sta obstacle2_x
+
+    lda obstacle3_x
+    sec
+    sbc obstacle_scroll
+    sta obstacle3_x
+
+    ; Obstacle x pos
+    lda obstacle1_x
+    sta oam + 88 + 3
+
+    lda obstacle2_x
+    sta oam + 92 + 3
+
+    lda obstacle3_x
+    sta oam + 96 + 3
+
+    ; If player1 x pos is smaller than obstacle x pos
+    ; And player1 x pos + width (24 (32 while ducking)) is smaller than obstacle x pos
+
+    ; If player1 x pos is smaller than obstacle x pos
+    lda oam + 3
+    cmp obstacle1_x
+    bcs NOT_COLLIDED
+
+    ; If obstacle x pos is smaller than player1 x pos + width
+    lda obstacle1_x
+    sec
+    sbc #24
+    cmp oam + 3
+    bcs NOT_COLLIDED
+
+    ; If player1 y pos is smaller than obstacle y pos
+    lda oam
+    cmp oam + 88
+    bcs NOT_COLLIDED
+
+    ; If obstacle y pos is smaller than player1 y pos + height
+    lda oam + 88
+    sec
+    sbc #24
+    cmp oam
+    bcs NOT_COLLIDED
+
+COLLIDED:
+    lda #0
+    sta oam + 3
+
+NOT_COLLIDED:
     lda #1
     sta nmi_ready
-    ;jsr horizontal_scrollling
+
+
     jmp mainloop
 .endproc
 
@@ -1008,7 +1386,7 @@ CONTINUE:
     ; Set sprite y
     sta oam + 36
     ; Set sprite tile
-    lda #1
+    lda #119
     sta oam + 36 + 1
     ; Set sprite attributes
     lda #0
@@ -1023,7 +1401,7 @@ CONTINUE:
     ; Set sprite y
     sta oam + 40
     ; Set sprite tile
-    lda #1
+    lda #117
     sta oam + 40 + 1
     ; Set sprite attributes
     lda #0
@@ -1125,7 +1503,7 @@ CONTINUE:
     ; Set sprite y
     sta oam + 16
     ; Set sprite tile
-    lda #1
+    lda #0
     sta oam + 16 + 1
     ; Set sprite attributes
     lda #0
@@ -1140,7 +1518,7 @@ CONTINUE:
     ; Set sprite y
     sta oam + 20
     ; Set sprite tile
-    lda #1
+    lda #100
     sta oam + 20 + 1
     ; Set sprite attributes
     lda #0
@@ -1155,7 +1533,7 @@ CONTINUE:
     ; Set sprite y
     sta oam + 32
     ; Set sprite tile
-    lda #1
+    lda #101
     sta oam + 32 + 1
     ; Set sprite attributes
     lda #0
@@ -1166,8 +1544,7 @@ CONTINUE:
 
     lda #0
     sta p1_duck
-    rts
-
+    
 RETURN:
     rts
 .endproc
