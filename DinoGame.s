@@ -480,6 +480,7 @@ rts
     ; oam + 32 = right head
     ; oam + 36 = bottom ducking head
     ; oam + 40 = top ducking head
+    ; oam + 88 = obstacle 1
 ; P1__________________________________________________________
     lda p1_min_y
     ; Set sprite y      oam = left foot
@@ -1021,7 +1022,7 @@ rts
     ldx #$00
     stx current_nametable
 
-     ; OBSTACLE X POS
+    ; OBSTACLE X POS
     lda #255
     sta obstacle1_x
     sta obstacle2_x
@@ -1036,6 +1037,10 @@ rts
     ; OBSTACLE SCROLL SPEED
     lda #2
     sta obstacle_scroll
+
+    ; p1_min_y - 8 = low bird flying height
+    ; p1_min_y - 16 = middle bird flying height
+    ; p1_min_y - 24 = top bird flying height
 
     ; Obstacle y pos on ground
     lda p1_min_y
@@ -1302,33 +1307,56 @@ CONTINUE:
     lda obstacle3_x
     sta oam + 96 + 3
 
-    ; If player1 x pos is smaller than obstacle x pos
-    ; And player1 x pos + width (24 (32 while ducking)) is smaller than obstacle x pos
-
-    ; If player1 x pos is smaller than obstacle x pos
-    lda oam + 3
-    cmp obstacle1_x
-    bcs NOT_COLLIDED
+    ; If player1 x pos is smaller than obstacle x pos + width
+    lda obstacle1_x
+    clc
+    adc #16 ; Width of 2 sprites
+    bcc :+
+    ; If carry is set, the obstacle is too close to the right side of the screen, we just use its x pos
+    lda obstacle1_x
+:   ; If carry is not set, the obstacle is not too close to the right side of the screen, we use its x pos + width
+    cmp oam + 3
+    bcc NOT_COLLIDED
 
     ; If obstacle x pos is smaller than player1 x pos + width
-    lda obstacle1_x
-    sec
-    sbc #24
-    cmp oam + 3
-    bcs NOT_COLLIDED
+    lda p1_duck
+    cmp #0
+    beq :+
+    ; Ducking
+    lda oam + 3
+    clc
+    adc #32
+    jmp :++
+: ; Not ducking
+    lda oam + 3
+    clc
+    adc #24
+: ; Resume
+    cmp obstacle1_x
+    bcc NOT_COLLIDED
 
-    ; If player1 y pos is smaller than obstacle y pos
-    lda oam
-    sec
-    sbc #1
-    cmp oam + 88
-    bcs NOT_COLLIDED
-
-    ; If obstacle y pos is smaller than player1 y pos + height
+    ; If player1 y pos is bigger than obstacle y pos + height
     lda oam + 88
     sec
-    sbc #24
+    sbc #8 ; 1 sprite height
     cmp oam
+    bcs NOT_COLLIDED
+
+    ; If player1 y pos + height is bigger than obstacle y pos
+    lda p1_duck
+    cmp #0
+    beq :+
+    ; Ducking
+    lda oam
+    sec
+    sbc #16 ; height while ducking
+    jmp :++
+: ; Not ducking
+    lda oam
+    sec
+    sbc #24 ; height while standing
+: ; Resume
+    cmp oam + 88
     bcs NOT_COLLIDED
 
 COLLIDED:
@@ -1338,7 +1366,6 @@ COLLIDED:
 NOT_COLLIDED:
     lda #1
     sta nmi_ready
-
 
     jmp mainloop
 .endproc
