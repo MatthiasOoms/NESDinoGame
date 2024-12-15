@@ -469,9 +469,20 @@ rts
     sta p2_max_y
 
     ; Set the sprite attributes
-    ; P1__________________________________________________________
+    ; oam = left foot
+    ; oam + 4 = right foot
+    ; oam + 8 = tail
+    ; oam + 12 = middle body
+    ; oam + 16 = empty left of head
+    ; oam + 20 = left head
+    ; oam + 24 = empty right of feet
+    ; oam + 28 = hands
+    ; oam + 32 = right head
+    ; oam + 36 = bottom ducking head
+    ; oam + 40 = top ducking head
+; P1__________________________________________________________
     lda p1_min_y
-    ; Set sprite y
+    ; Set sprite y      oam = left foot
     sta oam
     ; Set sprite tile
     lda #104
@@ -484,8 +495,7 @@ rts
     sta oam + 3
 
     lda p1_min_y
-    lda p1_min_y
-    ; Set sprite y
+    ; Set sprite y      oam + 4 = right foot
     sta oam + 4
     ; Set sprite tile
     lda #105
@@ -495,16 +505,12 @@ rts
     sta oam + 4 + 2
     ; Set sprite x
     lda #56
-    lda #56
     sta oam + 4 + 3
 
     lda p1_min_y
     sec
     sbc #8
-    lda p1_min_y
-    sec
-    sbc #8
-    ; Set sprite y
+    ; Set sprite y      oam + 8 = tail
     sta oam + 8
     ; Set sprite tile
     lda #102
@@ -519,7 +525,7 @@ rts
     lda p1_min_y
     sec
     sbc #8
-    ; Set sprite y
+    ; Set sprite y      oam + 12 = middle body
     sta oam + 12
     ; Set sprite tile
     lda #103
@@ -534,7 +540,7 @@ rts
     lda p1_min_y
     sec
     sbc #16
-    ; Set sprite y
+    ; Set sprite y      oam + 16 = empty left of head
     sta oam + 16
     ; Set sprite tile
     lda #0
@@ -549,7 +555,7 @@ rts
     lda p1_min_y
     sec
     sbc #16
-    ; Set sprite y
+    ; Set sprite y      oam + 20 = left head
     sta oam + 20
     ; Set sprite tile
     lda #100
@@ -562,7 +568,7 @@ rts
     sta oam + 20 + 3
 
     lda p1_min_y
-    ; Set sprite y
+    ; Set sprite y      oam + 24 = empty right of feet
     sta oam + 24
     ; Set sprite tile
     lda #0
@@ -577,7 +583,7 @@ rts
     lda p1_min_y
     sec
     sbc #8
-    ; Set sprite y
+    ; Set sprite y      oam + 28 = hands
     sta oam + 28
     ; Set sprite tile
     lda #106
@@ -592,7 +598,7 @@ rts
     lda p1_min_y
     sec
     sbc #16
-    ; Set sprite y
+    ; Set sprite y      oam + 32 = right head
     sta oam + 32
     ; Set sprite tile
     lda #101
@@ -605,7 +611,7 @@ rts
     sta oam + 32 + 3
 
     lda p1_min_y
-    ; Set sprite y
+    ; Set sprite y      oam + 36 = bottom ducking head
     sta oam + 36
     ; Set sprite tile
     lda #0
@@ -620,7 +626,7 @@ rts
     lda p1_min_y
     sec
     sbc #8
-    ; Set sprite y
+    ; Set sprite y      oam + 40 = top ducking head
     sta oam + 40
     ; Set sprite tile
     lda #0
@@ -633,7 +639,7 @@ rts
     sta oam + 40 + 3
     ;P1__________________________________________________________
 
-    ; P2__________________________________________________________
+; P2__________________________________________________________
     lda p2_min_y
     ; Set sprite y
     sta oam + 44
@@ -1313,6 +1319,8 @@ CONTINUE:
 
     ; If player1 y pos is smaller than obstacle y pos
     lda oam
+    sec
+    sbc #1
     cmp oam + 88
     bcs NOT_COLLIDED
 
@@ -1340,80 +1348,49 @@ NOT_COLLIDED:
 ;**************************************************************
 .segment "CODE"
 .proc player_duck
-    ; nose tiles
-    lda p1_min_y
-    ; Set sprite y
-    sta oam + 36
-    ; Set sprite tile
+    ; Set sprite tile       ; bottom ducking head
     lda #119
     sta oam + 36 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 36 + 2
-    ; Set sprite x
-    lda #72
-    sta oam + 36 + 3
 
-    lda p1_min_y
-    sec
-    sbc #8
-    ; Set sprite y
-    sta oam + 40
-    ; Set sprite tile
+    ; Set sprite tile       ; top ducking head
     lda #117
     sta oam + 40 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 40 + 2
-    ; Set sprite x
-    lda #72
-    sta oam + 40 + 3
-    
-    ; top head removes
-    lda p1_min_y
-    sec
-    sbc #16
-    ; Set sprite y
-    sta oam + 16
-    ; Set sprite tile
+
+    ; Set sprite tile       ; hands
+    lda #116
+    sta oam + 28 + 1
+
+    ; Set sprite tile       ; empty right of feet
+    lda #118
+    sta oam + 24 + 1
+
+    ; Set sprite tile       ; middle body
+    lda #113
+    sta oam + 12 + 1
+
+    ; Set sprite tile       ; right foot
+    lda #121
+    sta oam + 4 + 1
+
+    ; Set sprite tile       ; left foot
+    lda #120
+    sta oam + 1
+
+    ; Set sprite tile       ; tail
+    lda #112
+    sta oam + 8 + 1
+
+    ; Set sprite tile       ; empty left of head
     lda #0
     sta oam + 16 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 16 + 2
-    ; Set sprite x
-    lda #48
-    sta oam + 16 + 3
 
-    lda p1_min_y
-    sec
-    sbc #16
-    ; Set sprite y
-    sta oam + 20
-    ; Set sprite tile
+    ; Set sprite tile       ; left head
     lda #0
     sta oam + 20 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 20 + 2
-    ; Set sprite x
-    lda #56
-    sta oam + 20 + 3
     
-    lda p1_min_y
-    sec
-    sbc #16
-    ; Set sprite y
-    sta oam + 32
-    ; Set sprite tile
+    ; Set sprite tile       ; right head
     lda #0
     sta oam + 32 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 32 + 2
-    ; Set sprite x
-    lda #64
-    sta oam + 32 + 3
 
     lda #1
     sta p1_duck
@@ -1426,81 +1403,50 @@ NOT_COLLIDED:
     cmp #0
     beq RETURN
 
-    ; nose tiles
-    lda p1_min_y
-    ; Set sprite y
-    sta oam + 36
-    ; Set sprite tile
+    ; Set sprite tile       ; bottom ducking head
     lda #0
     sta oam + 36 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 36 + 2
-    ; Set sprite x
-    lda #72
-    sta oam + 36 + 3
-
-    lda p1_min_y
-    sec
-    sbc #8
-    ; Set sprite y
-    sta oam + 40
-    ; Set sprite tile
+    
+    ; Set sprite tile       ; top ducking head
     lda #0
     sta oam + 40 + 1
-    ; Set sprite attributes
+
+    ; Set sprite tile       ; hands
+    lda #106
+    sta oam + 28 + 1
+
+    ; Set sprite tile       ; empty right of feet
     lda #0
-    sta oam + 40 + 2
-    ; Set sprite x
-    lda #72
-    sta oam + 40 + 3
+    sta oam + 24 + 1
+
+    ; Set sprite tile       ; middle body
+    lda #103
+    sta oam + 12 + 1
+
+    ; Set sprite tile       ; right foot
+    lda #105
+    sta oam + 4 + 1
+
+    ; Set sprite tile       ; left foot
+    lda #104
+    sta oam + 1
+
+    ; Set sprite tile       ; tail
+    lda #102
+    sta oam + 8 + 1
     
-    ; top head removes
-    lda p1_min_y
-    sec
-    sbc #16
-    ; Set sprite y
-    sta oam + 16
-    ; Set sprite tile
+    ; Set sprite tile       ; empty left of head
     lda #0
     sta oam + 16 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 16 + 2
-    ; Set sprite x
-    lda #48
-    sta oam + 16 + 3
-
-    lda p1_min_y
-    sec
-    sbc #16
-    ; Set sprite y
-    sta oam + 20
-    ; Set sprite tile
+    
+    ; Set sprite tile       ; left head
     lda #100
     sta oam + 20 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 20 + 2
-    ; Set sprite x
-    lda #56
-    sta oam + 20 + 3
     
-    lda p1_min_y
-    sec
-    sbc #16
-    ; Set sprite y
-    sta oam + 32
-    ; Set sprite tile
+    ; Set sprite tile       ; right head
     lda #101
     sta oam + 32 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 32 + 2
-    ; Set sprite x
-    lda #64
-    sta oam + 32 + 3
-
+    
     lda #0
     sta p1_duck
     
