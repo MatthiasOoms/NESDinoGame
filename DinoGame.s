@@ -139,6 +139,11 @@ yenzo_name_text:
 hades_name_text:
 .byte 8, 1, 4, 5, 19, 0, 19, 16, 5, 18, 1, 14, 19, 11, 1, 25, 1, 255
 
+press_to_play_text:
+.byte 16, 18, 5, 19, 19, 0, 1, 0, 20, 15, 0, 16, 12, 1, 25, 255
+
+gameover_text:
+.byte 7, 1, 13, 5, 0, 15, 22, 5, 18, 255
 
 
 
@@ -417,22 +422,52 @@ rti
 	jsr write_text
 
 
-
     ; Write hades name
 	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32 + 2)
 	assign_address_to_ram text_address, hades_name_text
 	jsr write_text
 
 
+    ; Write press a to play
+	vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32 + 2)
+	assign_address_to_ram text_address, press_to_play_text
+	jsr write_text
 
 rts
 .endproc
 
 ;***************************************************************
-; display game screen
+; display death screen
 ;***************************************************************
 .segment "CODE"
-.proc clear_name_texts
+.proc display_gameover_screen
+
+    ;for the sake of simplicity, just reset the background
+    ldx #0
+    stx camera_x
+    ldx #$00
+    stx current_nametable
+
+
+    ; Write game over text
+	vram_set_address (NAME_TABLE_0_ADDRESS +  4 * 32 + 2 + 9)
+	assign_address_to_ram text_address, gameover_text
+	jsr write_text
+
+
+    ; Write press a to play
+	vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32 + 2 + 6)
+	assign_address_to_ram text_address, press_to_play_text
+	jsr write_text
+
+rts
+.endproc
+
+;***************************************************************
+; clear start screen text
+;***************************************************************
+.segment "CODE"
+.proc clear_gamestart_texts
 
     ; clear our game title text
 	vram_set_address (NAME_TABLE_0_ADDRESS)
@@ -460,11 +495,38 @@ rts
 	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32)
 	jsr clear_background_line
 
+
+    ; clear instruction 
+	vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32)
+	jsr clear_background_line
+
+
+
     rts
 
 
 .endproc
 
+
+;***************************************************************
+; clear gameover screen text
+;***************************************************************
+.segment "CODE"
+.proc clear_gameover_texts
+
+
+    ; game over text
+	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32)
+	jsr clear_background_line
+
+    ; oress a text
+	vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32)
+	jsr clear_background_line
+
+    rts
+
+
+.endproc
 
 
 ;***************************************************************
@@ -1199,6 +1261,30 @@ rts
 .endproc
 
 
+.segment "CODE"
+.proc reset_game
+    ;reset score tiles
+    lda #27
+    sta oam + 220 + 1
+    sta oam + 224 + 1
+    sta oam + 228 + 1
+    sta oam + 232 + 1
+    sta oam + 236 + 1
+    sta oam + 240 + 1
+    sta oam + 244 + 1
+    sta oam + 248 + 1
+
+
+    ; reset scroll speeds
+    ldx #0
+    stx camera_x
+    ldx #$00
+    stx current_nametable
+    ldx #1
+    sta global_speed
+
+.endproc
+
 ;**************************************************************
 ; Main application logic section includes the game loop
 ;**************************************************************
@@ -1252,7 +1338,7 @@ titleloop:
     lda nmi_ready
     cmp #0
     bne waittoclearloop
-    jsr clear_name_texts
+    jsr clear_gamestart_texts
 
 
 
@@ -1508,11 +1594,51 @@ COLLIDED:
     lda #0
     sta oam + 3
 
+    jmp playerdied
+
 NOT_COLLIDED:
     lda #1
     sta nmi_ready
 
     jmp mainloop
+
+
+
+
+playerdied:
+    ;stop scrolling
+    ldx #0
+    sta global_speed
+
+
+    ; draw game over texts when nmi ready
+    waitfornmiloop:
+    lda nmi_ready
+    cmp #0
+    bne waitfornmiloop
+    jsr display_gameover_screen
+
+
+gameoverloop:
+    jsr gamepad_poll
+    lda gamepad
+    and #PAD_A|PAD_B|PAD_START|PAD_SELECT
+    beq gameoverloop
+
+    lda #1
+    sta is_game_in_main
+
+    ; clear gameover texts when nmi is ready
+    waittorestartloop:
+    lda nmi_ready
+    cmp #0
+    bne waittorestartloop
+    jsr clear_gameover_texts
+    jsr reset_game
+    jmp mainloop
+
+
+
 .endproc
 
 ;**************************************************************
