@@ -36,6 +36,12 @@ INES_SRAM = 0
 .segment "ZEROPAGE"
 gamepad: .res 1
 
+is_game_in_main: .res 1
+
+; randomizer seeds
+seed_0: .res 2
+seed_2: .res 2
+
 ; Y position of the players
 p1_min_y: .res 1
 p2_min_y: .res 1
@@ -53,13 +59,15 @@ jmp_speed: .res 1
 ; x coordinate of camera
 camera_x: .res 1
 current_nametable: .res 1
+global_speed: .res 1
+placeholder: .res 1
 
 ; time variables
 time: .res 2
 lasttime: .res 1
 
 p1_duck: .res 1
-p2_duck: .res 2
+p2_duck: .res 1
 
 ; Obstacle x pos
 obstacle1_x: .res 1
@@ -73,6 +81,7 @@ obstacle3_type: .res 1
 
 ; Obstacle scroll speed
 obstacle_scroll: .res 1
+
 
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
@@ -102,10 +111,34 @@ default_palette:
 
 
 horizon_line_one:
-.byte 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75
+.byte 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 255
+
+horizon_subline_one:
+.byte 0, 0, 0, 0, 76, 0, 0, 77, 76, 0, 0, 0, 0, 0, 0, 80, 76, 77, 0, 0, 0, 0, 0, 0, 80, 81, 77, 0, 0, 0, 81, 76, 0, 255
 
 horizon_line_two:
 .byte 75, 75, 75, 75, 75, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75
+
+horizon_subline_two:
+.byte 26, 0, 0, 0, 76, 0, 0, 77, 76, 0, 0, 0, 0, 0, 0, 80, 76, 77, 0, 0, 0, 0, 0, 0, 80, 81, 77, 0, 0, 0, 81, 76, 0, 255
+
+
+
+game_title_text:
+.byte 3, 8, 18, 15, 13, 5, 0, 4, 9, 14, 15, 0, 7, 1, 13, 5, 255
+
+by_text:
+.byte 2, 25, 255
+
+matt_name_text:
+.byte 13, 1, 20, 20, 8, 9, 1, 19, 0, 15, 15, 13, 19, 255
+
+yenzo_name_text:
+.byte 25, 5, 14, 26, 15, 0, 4, 5, 22, 15, 19, 255
+
+hades_name_text:
+.byte 8, 1, 4, 5, 19, 0, 19, 16, 5, 18, 1, 14, 19, 11, 1, 25, 1, 255
+
 
 
 
@@ -178,7 +211,6 @@ rti
         inx
         inx
         bne clear_oam   
-
         ; Wait for the second vblank
     wait_vblank2:
         bit PPU_STATUS
@@ -248,9 +280,20 @@ rti
             ldx #0
             stx nmi_ready
     ppu_update_end:
+        lda is_game_in_main
+        cmp #1
+        beq start_scrolling
 
-        jsr horizontal_scrollling
+        pla
+        tay
+        pla
+        tax
+        pla
+        rti
 
+    start_scrolling:
+    
+        jsr horizontal_scrollling 
         pla
         tay
         pla
@@ -280,27 +323,29 @@ rti
          lda #00
          sta PPU_VRAM_ADDRESS1
 
-         ldx camera_x
-         inx
-         stx camera_x
+         lda camera_x
+         clc
+         adc global_speed
+         sta camera_x
 
-    	
-         cpx 255
-         bne ending
+         bcc ending
 
-         ldx 0
-         stx camera_x
+        ; check if nametable needs switching
+         lda current_nametable
+         cmp #0
 
-         ldx current_nametable
-         cpx #$00
          bne firsttable
-            ldx #$01
-            stx current_nametable
+            lda #1
+            sta current_nametable
             jmp ending
 
         firsttable:
-            ldx #$00
-            stx current_nametable
+            lda #0
+            sta current_nametable
+            ;increase game speed every two nametable renderings
+            ldx global_speed
+            inx
+            stx global_speed
             jmp ending
 
 
@@ -309,72 +354,117 @@ rti
 .endproc
 
 
-
 ;***************************************************************
-; draw horizon line
+; display game screen
 ;***************************************************************
 .segment "CODE"
-.proc draw_horizon_one
+.proc display_start_game_screen
 
-    ;reset address latch
-    lda PPU_STATUS
+    vram_set_address (NAME_TABLE_0_ADDRESS + 12 * 32)
+	assign_address_to_ram text_address, horizon_line_one
+	jsr write_text
 
-    ;iterate over the horizon line
-    ldx #0
-    loop:
-        lda horizon_line_one, x
-        sta PPU_VRAM_IO
-        inx
-        cpx #32
-        beq :+ 
-        jmp loop
+    vram_set_address (NAME_TABLE_0_ADDRESS + 13 * 32)
+	assign_address_to_ram text_address, horizon_subline_one
+	jsr write_text
 
-    :
-    rts
+    vram_set_address (NAME_TABLE_0_ADDRESS + 28 * 32)
+	assign_address_to_ram text_address, horizon_line_one
+	jsr write_text
+
+    vram_set_address (NAME_TABLE_0_ADDRESS + 29 * 32)
+	assign_address_to_ram text_address, horizon_subline_one
+	jsr write_text
+
+
+
+    vram_set_address (NAME_TABLE_1_ADDRESS + 12 * 32)
+	assign_address_to_ram text_address, horizon_line_two
+	jsr write_text
+
+    vram_set_address (NAME_TABLE_1_ADDRESS + 13 * 32)
+	assign_address_to_ram text_address, horizon_subline_two
+	jsr write_text
+
+    vram_set_address (NAME_TABLE_1_ADDRESS + 28 * 32)
+	assign_address_to_ram text_address, horizon_line_two
+	jsr write_text
+
+    vram_set_address (NAME_TABLE_1_ADDRESS + 29 * 32)
+	assign_address_to_ram text_address, horizon_subline_two
+	jsr write_text
+
+
+    ; Write our game title text
+	vram_set_address (NAME_TABLE_0_ADDRESS + 2)
+	assign_address_to_ram text_address, game_title_text
+	jsr write_text
+
+    ; Write by text
+	vram_set_address (NAME_TABLE_0_ADDRESS + 32 + 2)
+	assign_address_to_ram text_address, by_text
+	jsr write_text
+
+    
+    ; Write yenzo name
+	vram_set_address (NAME_TABLE_0_ADDRESS + 2 * 32 + 2)
+	assign_address_to_ram text_address, yenzo_name_text
+	jsr write_text
+
+    ; Write matt name
+	vram_set_address (NAME_TABLE_0_ADDRESS + 3 * 32 + 2)
+	assign_address_to_ram text_address, matt_name_text
+	jsr write_text
+
+
+
+    ; Write hades name
+	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32 + 2)
+	assign_address_to_ram text_address, hades_name_text
+	jsr write_text
+
+
+
+rts
 .endproc
-
-.segment "CODE"
-.proc draw_horizon_two
-
-    ;reset address latch
-    lda PPU_STATUS
-
-    ;iterate over the horizon line
-    ldx #0
-    loop:
-        lda horizon_line_two, x
-        sta PPU_VRAM_IO
-        inx
-        cpx #32
-        beq :+ 
-        jmp loop
-
-    :
-    rts
-.endproc
-
 
 ;***************************************************************
 ; display game screen
 ;***************************************************************
 .segment "CODE"
-.proc display_game_screen
+.proc clear_name_texts
 
-    vram_set_address (NAME_TABLE_0_ADDRESS + 12 * 32)
-    jsr draw_horizon_one
-
-    vram_set_address (NAME_TABLE_0_ADDRESS + 28 * 32)
-    jsr draw_horizon_one
-
-    vram_set_address (NAME_TABLE_1_ADDRESS + 12 * 32)
-    jsr draw_horizon_two
-
-    vram_set_address (NAME_TABLE_1_ADDRESS + 28 * 32)
-    jsr draw_horizon_two
+    ; clear our game title text
+	vram_set_address (NAME_TABLE_0_ADDRESS)
+	jsr clear_background_line
 
 
-rts
+    ; clear by text
+	vram_set_address (NAME_TABLE_0_ADDRESS + 1 * 32)
+	jsr clear_background_line
+
+    
+    ; clear yenzo name
+	vram_set_address (NAME_TABLE_0_ADDRESS + 2 * 32)
+	jsr clear_background_line
+
+
+
+    ; clear matt name
+	vram_set_address (NAME_TABLE_0_ADDRESS + 3 * 32)
+	jsr clear_background_line
+
+
+
+    ; clear hades name
+	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32)
+	jsr clear_background_line
+
+    rts
+
+
 .endproc
+
 
 
 ;***************************************************************
@@ -383,26 +473,41 @@ rts
 .segment "CODE"
 .proc update_score
 
-; 27 is 0 in the charset
-; 36 is 9 in the charset
+    ; 27 is 0 in the charset
+    ; 36 is 9 in the charset
 
-    ldx #248 + 1
+    lda global_speed
+    sta placeholder
 
     loop:
+    ;right most score char plus the index for the used tile
+    ldx #248 + 1
+
+    subloop:
+    ;if it is not a nine yet, simply increment this number
     ldy oam, X
     cpy #36
-    bne ending
-
+    bne incrementchar
+    ;if it is a nine, set it to zero
     lda #27
     sta oam, X
-    sec
+    ;shift the accumulator to work with the next score character by subtracting four
     txa
+    sec
     sbc #4
     tax
-    jmp loop
+    ;go check if the new score character is a zero or not
+    jmp subloop
 
-    ending:
+    ;increment the tile used to the next value
+    incrementchar:
     inc oam, X
+
+    ldx placeholder
+    dex
+    stx placeholder
+    cpx #0
+    bne loop
 
     rts
 
@@ -442,6 +547,10 @@ rts
 ;***************************************************************
 .segment "CODE"
 .proc init_variables
+    ; set bool of is in main
+    lda #0
+    sta is_game_in_main
+
     ; Set the jump speed
     lda #3
     sta jmp_speed
@@ -1081,6 +1190,11 @@ rts
     lda obstacle3_x
     sta oam + 96 + 3
 
+
+
+    lda #1
+    sta global_speed
+
     rts
 .endproc
 
@@ -1106,9 +1220,40 @@ paletteloop:
 
 jsr init_variables
 
-jsr display_game_screen
+jsr display_start_game_screen
 
 jsr ppu_update
+
+;this makes the screen display correctly, for some reason it does not do it correctly otherwise
+jsr horizontal_scrollling
+
+titleloop:
+    jsr gamepad_poll
+    lda gamepad
+    and #PAD_A|PAD_B|PAD_START|PAD_SELECT
+    beq titleloop
+
+    lda time
+    sta seed_0
+    lda time+1
+    sta seed_0+1
+    jsr randomize
+    sbc time+1
+    sta seed_2
+    jsr randomize
+    sbc time
+    sta seed_2+1
+
+    lda #1
+    sta is_game_in_main
+
+    ; clear name texts when nmi is ready
+    waittoclearloop:
+    lda nmi_ready
+    cmp #0
+    bne waittoclearloop
+    jsr clear_name_texts
+
 
 
 mainloop:
@@ -1478,5 +1623,62 @@ NOT_COLLIDED:
     sta p1_duck
     
 RETURN:
+    rts
+.endproc
+
+;**************************************************************
+; randomizer code
+;**************************************************************
+.segment "CODE"
+.proc randomize
+    lda seed_0
+    lsr
+    rol seed_0+1
+    BCC @noeor
+    eor #$B4
+@noeor:
+    sta seed_0
+    eor seed_0+1
+    rts
+.endproc
+
+.segment "CODE"
+.proc rand
+    jsr rand64k
+    jsr rand32k
+    lda seed_0+1
+    eor seed_2+1
+    tay
+    lda seed_0
+    eor seed_2
+    rts
+.endproc
+
+.segment "CODE"
+.proc rand64k
+    lda seed_0+1
+    asl
+    asl 
+    eor seed_0+1
+    asl
+    eor seed_0+1
+    asl
+    asl
+    eor seed_0+1
+    asl
+    rol seed_0
+    rol seed_0+1
+    rts
+.endproc
+
+.segment "CODE"
+.proc rand32k
+    lda seed_2+1
+    asl
+    eor seed_2+1
+    asl
+    asl
+    ror seed_2
+    rol seed_2+1
     rts
 .endproc
