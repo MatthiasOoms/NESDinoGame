@@ -1301,8 +1301,9 @@ rti
     lda #162
     sta p1_min_y
 
-    lda #0
+    lda #2
     sta global_speed
+    lda #0
     sta global_clock
     sta global_clock_big
 
@@ -1692,7 +1693,7 @@ titleloop:
     jsr clear_gamestart_texts
 
     ;start scrolling
-    lda #1
+    lda #2
     sta global_speed
     jsr horizontal_scrollling
 
@@ -2013,7 +2014,7 @@ gameoverloop:
     jsr reset_game
     jsr clear_gameover_texts
     ;start scrolling
-    lda #1
+    lda #2
     sta global_speed
     jsr horizontal_scrollling
 
