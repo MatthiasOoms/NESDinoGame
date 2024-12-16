@@ -433,7 +433,7 @@ rti
 	assign_address_to_ram text_address, press_to_play_text
 	jsr write_text
 
-rts
+    rts
 .endproc
 
 ;***************************************************************
@@ -442,11 +442,70 @@ rts
 .segment "CODE"
 .proc display_gameover_screen
 
-    ;for the sake of simplicity, just reset the background
-    ldx #0
-    stx camera_x
-    ldx #$00
-    stx current_nametable
+    ;draw dead dino
+    ;oam = left foot
+    ;Set sprite tile
+    lda #104
+    sta oam + 1
+
+    ;oam + 4 = right foot
+    ; Set sprite tile
+    lda #105
+    sta oam + 4 + 1
+
+    ;oam + 8 = tail
+    ; Set sprite tile
+    lda #102
+    sta oam + 8 + 1
+
+    ;oam + 12 = middle body
+    ; Set sprite tile
+    lda #103
+    sta oam + 12 + 1
+
+    ;oam + 16 = empty left of head
+    ; Set sprite tile
+    lda #0
+    sta oam + 16 + 1
+
+    ;oam + 20 = left head
+    ; Set sprite tile
+    lda #110
+    sta oam + 20 + 1
+
+    ;oam + 24 = empty right of feet
+    ; Set sprite tile
+    lda #0
+    sta oam + 24 + 1
+
+    ;oam + 28 = hands
+    ; Set sprite tile
+    lda #111
+    sta oam + 28 + 1
+
+    ;oam + 32 = right head
+    ; Set sprite tile
+    lda #101
+    sta oam + 32 + 1
+
+    ;oam + 36 = bottom ducking head
+    ; Set sprite tile
+    lda #0
+    sta oam + 36 + 1
+
+    ;oam + 40 = top ducking head
+    ; Set sprite tile
+    lda #0
+    sta oam + 40 + 1
+
+
+    ;for the sake of simplicity, just stop scrolling and reset the background
+    lda #0
+    sta global_speed
+    lda #0
+    sta camera_x
+    lda #$00
+    sta current_nametable
 
 
     ; Write game over text
@@ -460,7 +519,7 @@ rts
 	assign_address_to_ram text_address, press_to_play_text
 	jsr write_text
 
-rts
+    rts
 .endproc
 
 ;***************************************************************
@@ -968,9 +1027,9 @@ rts
     ; Set sprite x
     lda #72
     sta oam + 84 + 3
-    ;P2__________________________________________________________
+    ; P2__________________________________________________________
 
-  ; highscore__________________________________________________________
+; highscore__________________________________________________________
     ;h
     lda 0
     ; Set sprite y
@@ -1183,15 +1242,17 @@ rts
     lda #28 * 8
     sta oam + 248 + 3
 
-    ;highscore__________________________________________________________
+    ; highscore__________________________________________________________
 
-
+; misc__________________________________________________________
 
     ; set initial x scroll value as zero
-    ldx #0
-    stx camera_x
-    ldx #$00
-    stx current_nametable
+    lda #0
+    sta camera_x
+    lda #$00
+    sta current_nametable
+    lda #1
+    sta global_speed
 
     ; OBSTACLE X POS
     lda #255
@@ -1252,38 +1313,12 @@ rts
     lda obstacle3_x
     sta oam + 96 + 3
 
+    ; misc__________________________________________________________
 
-
-    lda #1
-    sta global_speed
 
     rts
 .endproc
 
-
-.segment "CODE"
-.proc reset_game
-    ;reset score tiles
-    lda #27
-    sta oam + 220 + 1
-    sta oam + 224 + 1
-    sta oam + 228 + 1
-    sta oam + 232 + 1
-    sta oam + 236 + 1
-    sta oam + 240 + 1
-    sta oam + 244 + 1
-    sta oam + 248 + 1
-
-
-    ; reset scroll speeds
-    ldx #0
-    stx camera_x
-    ldx #$00
-    stx current_nametable
-    ldx #1
-    sta global_speed
-
-.endproc
 
 ;**************************************************************
 ; Main application logic section includes the game loop
@@ -1591,32 +1626,19 @@ CONTINUE:
     bcs NOT_COLLIDED
 
 COLLIDED:
-    lda #0
-    sta oam + 3
-
     jmp playerdied
 
 NOT_COLLIDED:
     lda #1
     sta nmi_ready
-
     jmp mainloop
 
 
-
-
 playerdied:
-    ;stop scrolling
-    ldx #0
-    sta global_speed
-
-
-    ; draw game over texts when nmi ready
-    waitfornmiloop:
-    lda nmi_ready
     cmp #0
-    bne waitfornmiloop
     jsr display_gameover_screen
+    lda #1
+    sta nmi_ready
 
 
 gameoverloop:
@@ -1625,16 +1647,18 @@ gameoverloop:
     and #PAD_A|PAD_B|PAD_START|PAD_SELECT
     beq gameoverloop
 
-    lda #1
-    sta is_game_in_main
 
     ; clear gameover texts when nmi is ready
     waittorestartloop:
     lda nmi_ready
     cmp #0
     bne waittorestartloop
+
+    ;prepare game for playing 
+    jsr init_variables
+    lda #1
+    sta is_game_in_main
     jsr clear_gameover_texts
-    jsr reset_game
     jmp mainloop
 
 
