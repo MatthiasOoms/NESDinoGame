@@ -107,13 +107,13 @@ horizon_line_one:
 .byte 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 75, 255
 
 horizon_subline_one:
-.byte 0, 0, 0, 0, 76, 0, 0, 77, 76, 0, 0, 0, 0, 0, 0, 80, 76, 77, 0, 0, 0, 0, 0, 0, 80, 81, 77, 0, 0, 0, 81, 76, 0, 255
+.byte 20, 0, 0, 0, 76, 0, 0, 77, 76, 0, 0, 0, 0, 0, 0, 80, 76, 77, 0, 0, 0, 0, 0, 0, 80, 81, 77, 0, 0, 0, 81, 76, 0, 255
 
 horizon_line_two:
-.byte 75, 75, 75, 75, 75, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75
+.byte 0, 75, 75, 75, 75, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75, 75, 75, 75, 78, 75, 75, 75, 75, 78, 79, 75, 75, 75, 75, 75, 75
 
 horizon_subline_two:
-.byte 0, 0, 0, 0, 76, 0, 0, 77, 76, 0, 0, 0, 0, 0, 0, 80, 76, 77, 0, 0, 0, 0, 0, 0, 80, 81, 77, 0, 0, 0, 81, 76, 0, 255
+.byte 26, 0, 0, 0, 76, 0, 0, 77, 76, 0, 0, 0, 0, 0, 0, 80, 76, 77, 0, 0, 0, 0, 0, 0, 80, 81, 77, 0, 0, 0, 81, 76, 0, 255
 
 
 
@@ -266,7 +266,6 @@ rti
         lda PPU_STATUS
 
         vram_set_address ($3F00)
-
         ldx #0
     loop:
             lda palette, x
@@ -276,14 +275,13 @@ rti
             bcc loop
             lda #%00011110
             sta PPU_MASK
+
             ldx #0
             stx nmi_ready
 
 
     ppu_update_end:
-
         jsr horizontal_scrollling
-
         pla
         tay
         pla
@@ -298,6 +296,37 @@ rti
 .segment "CODE"
 .proc horizontal_scrollling
 
+
+    lda global_speed 
+    cmp #0
+    beq scroll
+
+         lda camera_x
+         clc
+         adc global_speed
+         sta camera_x
+
+         bcc scroll
+
+        ; check if nametable needs switching
+         lda current_nametable
+         cmp #0
+
+         bne firsttable
+            lda #1
+            sta current_nametable
+
+            jmp edit
+
+        firsttable:
+            lda #0
+            sta current_nametable
+
+
+        edit: 
+            jsr edit_background
+
+    scroll:
     ; reset address latch
          lda PPU_STATUS
 
@@ -313,32 +342,135 @@ rti
          lda #00
          sta PPU_VRAM_ADDRESS1
 
-         lda camera_x
-         clc
-         adc global_speed
-         sta camera_x
-
-         bcc ending
-
-        ; check if nametable needs switching
-         lda current_nametable
-         cmp #0
-
-         bne firsttable
-            lda #1
-            sta current_nametable
-            jmp ending
-
-        firsttable:
-            lda #0
-            sta current_nametable
-            jmp ending
-
 
         ending:
     rts
 .endproc
 
+;***************************************************************
+; randomize tiles that just went offscreen
+;***************************************************************
+.segment "CODE"
+.proc edit_background
+
+
+        ;start with horizonline
+
+        lda current_nametable
+        cmp #1
+        beq one
+            vram_set_address(NAME_TABLE_1_ADDRESS + 20 * 32)
+            jmp :+
+        one:
+            vram_set_address(NAME_TABLE_0_ADDRESS + 20 * 32)
+        :
+
+        ldy #0
+        indexloop:
+            cpy #32
+            beq dirt
+            iny
+
+            jsr rand32k
+
+             cmp #120
+             bpl plainhorizon
+
+             cmp #100
+             bpl horizon1
+
+             cmp #90
+             bpl horizon2
+
+             plainhorizon:
+             ldx #74
+             jmp writehorizon
+
+             horizon1:
+             ldx #78
+             jmp writehorizon
+
+             horizon2:
+             ldx #79
+             jmp writehorizon
+
+
+             writehorizon:
+             txa
+             sta PPU_VRAM_IO
+
+             jmp indexloop
+
+
+
+            dirt:
+            
+            ;continue with dirt line
+            lda current_nametable
+            cmp #1
+            beq onedirt
+                vram_set_address(NAME_TABLE_1_ADDRESS + 21 * 32)
+                jmp :+
+            onedirt:
+                vram_set_address(NAME_TABLE_0_ADDRESS + 21 * 32)
+            :
+
+            ldy #0
+            indexloop2:
+                cpy #32
+                beq end
+                iny
+
+                jsr rand32k
+
+                 cmp #120
+                 bpl plaindirt
+
+                 cmp #100
+                 bpl dirt1
+
+                 cmp #90
+                 bpl dirt2
+
+                 cmp #80
+                 bpl dirt3
+
+                 cmp #70
+                 bpl dirt4
+
+                 plaindirt:
+                 ldx #0
+                 jmp writedirt
+
+                 dirt1:
+                 ldx #76
+                 jmp writedirt
+
+                 dirt2:
+                 ldx #87
+                 jmp writedirt
+
+                 dirt3:
+                 ldx #80
+                 jmp writedirt
+
+                 dirt4:
+                 ldx #81
+                 jmp writedirt
+
+                 writedirt:
+                 txa
+                 sta PPU_VRAM_IO
+
+                 jmp indexloop2
+
+        end:
+
+        vram_clear_address
+
+        rts
+
+.endproc
 
 ;***************************************************************
 ; display game screen
@@ -1615,7 +1747,7 @@ rti
     sta camera_x
     lda #$00
     sta current_nametable
-    lda #0
+    lda #2
     sta global_speed
 
     ; OBSTACLE X POS
@@ -1669,6 +1801,12 @@ paletteloop:
     jsr ppu_update
 
     titleloop:
+jsr ppu_update
+
+jsr horizontal_scrollling
+
+
+titleloop:
     lda nmi_ready
     cmp #0
     bne titleloop
@@ -2023,6 +2161,7 @@ NOT_COLLIDED:
     bcc :+
     inc global_speed
 :
+
     lda #1
     sta nmi_ready
     jmp mainloop
@@ -2030,35 +2169,21 @@ NOT_COLLIDED:
 
 playerdied:
 
-    lda #1
-    sta nmi_ready
-    ; clear gameover texts when nmi is ready
-    waittodieloop:
-    lda nmi_ready
-    cmp #0
-    bne waittodieloop
-
     jsr record_new_highscore
     jsr display_gameover_screen
     jsr horizontal_scrollling
 
-   
     lda #1
     sta nmi_ready
 
 
 gameoverloop:
+    lda nmi_ready
+    cmp #0
     jsr gamepad_poll
     lda gamepad
     and #PAD_A|PAD_B|PAD_START|PAD_SELECT
     beq gameoverloop
-
-
-    ; clear gameover texts when nmi is ready
-    waittorestartloop:
-    lda nmi_ready
-    cmp #0
-    bne waittorestartloop
 
     ;prepare game for playing 
     jsr reset_game
@@ -2068,6 +2193,8 @@ gameoverloop:
     sta global_speed
     jsr horizontal_scrollling
 
+    lda #1
+    sta nmi_ready
 
     jmp mainloop
 
