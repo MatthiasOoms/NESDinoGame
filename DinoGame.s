@@ -72,9 +72,11 @@ p2_duck: .res 1
 ; Obstacle x pos
 obstacle1_x: .res 1
 obstacle2_x: .res 1
-obstacle3_x: .res 1
 
-; Obstacle type (1 = small cactus, 2 = big cactus, 3 = bird)
+; Obstacle active
+obstacle2_active: .res 1
+
+; Obstacle type (1 = cactus, 2 = double cactus, 3 = bird)
 obstacle1_type: .res 1
 obstacle2_type: .res 1
 obstacle3_type: .res 1
@@ -578,7 +580,7 @@ rts
     sta p2_max_y
 
     ; Set the sprite attributes
-    ; P1__________________________________________________________
+; P1__________________________________________________________
     lda p1_min_y
     ; Set sprite y
     sta oam
@@ -1116,35 +1118,44 @@ rts
 
     ;highscore__________________________________________________________
 
-
-
     ; set initial x scroll value as zero
-    ldx #0
-    stx camera_x
-    ldx #$00
-    stx current_nametable
+    lda #0
+    sta camera_x
+    lda #$00
+    sta current_nametable
+    lda #0
+    sta global_speed
 
-     ; OBSTACLE X POS
+    ; OBSTACLE X POS
     lda #255
     sta obstacle1_x
     sta obstacle2_x
-    sta obstacle3_x
 
     ; OBSTACLE TYPE
-    lda #1
+    lda #%00000000
     sta obstacle1_type
+    lda #%00000010
     sta obstacle2_type
+    lda #%00000011
     sta obstacle3_type
 
     ; OBSTACLE SCROLL SPEED
     lda #2
     sta obstacle_scroll
 
+    ; p1_min_y - 8 = low bird flying height
+    ; p1_min_y - 16 = middle bird flying height
+    ; p1_min_y - 24 = top bird flying height
+
+; Obstacle 1 88-100
+    ; left top
     ; Obstacle y pos on ground
     lda p1_min_y
+    sec
+    sbc #8
     sta oam + 88
     ; Set sprite tile
-    lda #1
+    lda #84
     sta oam + 88 + 1
     ; Set sprite attributes
     lda #0
@@ -1153,32 +1164,138 @@ rts
     lda obstacle1_x
     sta oam + 88 + 3
 
+    ; right top
     ; Obstacle y pos on ground
     lda p1_min_y
+    sec
+    sbc #8
     sta oam + 92
     ; Set sprite tile
-    lda #0
+    lda #85
     sta oam + 92 + 1
     ; Set sprite attributes
-    lda #0
+    lda #%01000000
     sta oam + 92 + 2
     ; Obstacle x pos
-    lda obstacle2_x
+    lda obstacle1_x
+    sec
+    sbc #7
     sta oam + 92 + 3
 
+    ; left bottom
     ; Obstacle y pos on ground
     lda p1_min_y
     sta oam + 96
     ; Set sprite tile
-    lda #0
+    lda #86
     sta oam + 96 + 1
     ; Set sprite attributes
     lda #0
     sta oam + 96 + 2
     ; Obstacle x pos
-    lda obstacle3_x
+    lda obstacle1_x
     sta oam + 96 + 3
 
+    ; right bottom
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sta oam + 100
+    ; Set sprite tile
+    lda #87
+    sta oam + 100 + 1
+    ; Set sprite attributes
+    lda #%01000000
+    sta oam + 100 + 2
+    ; Obstacle x pos
+    lda obstacle1_x
+    sec
+    sbc #7
+    sta oam + 100 + 3 
+
+; Obstacle 2 104 - 124 (bird or second cacti)
+    ; left top
+    ; Obstacle y pos on ground
+    lda p1_min_y + 8
+    sta oam + 104
+    ; Set sprite tile
+    lda #0
+    sta oam + 104 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 104 + 2
+    ; Obstacle x pos
+    lda obstacle2_x
+    sta oam + 104 + 3
+
+    ; right top
+    ; Obstacle y pos on ground
+    lda p1_min_y + 8
+    sta oam + 108
+    ; Set sprite tile
+    lda #0
+    sta oam + 108 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 108 + 2
+    ; Obstacle x pos
+    lda obstacle2_x + 8
+    sta oam + 108 + 3
+
+    ; left bottom
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sta oam + 112
+    ; Set sprite tile
+    lda #0
+    sta oam + 112 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 112 + 2
+    ; Obstacle x pos
+    lda obstacle2_x
+    sta oam + 112 + 3
+
+    ; right bottom
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sta oam + 116
+    ; Set sprite tile
+    lda #0
+    sta oam + 116 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 116 + 2
+    ; Obstacle x pos
+    lda obstacle2_x + 8
+    sta oam + 116 + 3
+
+    ; optional tail
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sta oam + 120
+    ; Set sprite tile
+    lda #0
+    sta oam + 120 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 120 + 2
+    ; Obstacle x pos
+    lda obstacle2_x
+    sta oam + 120 + 3
+
+    ; down wing
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sta oam + 124
+    ; Set sprite tile
+    lda #0
+    sta oam + 124 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 124 + 2
+    ; Obstacle x pos
+    lda obstacle2_x + 8
+    sta oam + 124 + 3
 
 
     lda #1
@@ -1415,6 +1532,19 @@ MOVE_UP:
     jmp CONTINUE
 
 CONTINUE:
+    ; create random number
+    ;jsr rand
+    ;sta temp
+    ;and obstacle1_type
+    ;beq SETOBSTACLECACTI
+    ;lda temp
+    ;and obstacle2_type
+    ;beq SETOBSTACLEDOUBLECACTI
+    ;lda temp
+    ;and obstacle3_type
+    ;beq SETOBSTACLESPRITEBIRD
+
+    ;jsr check_sprite_number_obstacle1
     ; Calculate next object x pos
     lda obstacle1_x
     sec 
@@ -1426,46 +1556,59 @@ CONTINUE:
     sbc obstacle_scroll
     sta obstacle2_x
 
-    lda obstacle3_x
-    sec
-    sbc obstacle_scroll
-    sta obstacle3_x
-
     ; Obstacle x pos
+    jsr move_obstacle
+
+    ; If player1 x pos is smaller than obstacle x pos + width
     lda obstacle1_x
-    sta oam + 88 + 3
-
-    lda obstacle2_x
-    sta oam + 92 + 3
-
-    lda obstacle3_x
-    sta oam + 96 + 3
-
-    ; If player1 x pos is smaller than obstacle x pos
-    ; And player1 x pos + width (24 (32 while ducking)) is smaller than obstacle x pos
-
-    ; If player1 x pos is smaller than obstacle x pos
-    lda oam + 3
-    cmp obstacle1_x
-    bcs NOT_COLLIDED
+    clc
+    adc #16 ; Width of 2 sprites
+    bcc :+
+    ; If carry is set, the obstacle is too close to the right side of the screen, we just use its x pos
+    lda obstacle1_x
+:   ; If carry is not set, the obstacle is not too close to the right side of the screen, we use its x pos + width
+    cmp oam + 3
+    bcc NOT_COLLIDED
 
     ; If obstacle x pos is smaller than player1 x pos + width
-    lda obstacle1_x
-    sec
-    sbc #24
-    cmp oam + 3
-    bcs NOT_COLLIDED
+    lda p1_duck
+    cmp #0
+    beq :+
+    ; Ducking
+    lda oam + 3
+    clc
+    adc #32
+    jmp :++
+: ; Not ducking
+    lda oam + 3
+    clc
+    adc #24
+: ; Resume
+    cmp obstacle1_x
+    bcc NOT_COLLIDED
 
-    ; If player1 y pos is smaller than obstacle y pos
-    lda oam
-    cmp oam + 88
-    bcs NOT_COLLIDED
-
-    ; If obstacle y pos is smaller than player1 y pos + height
+    ; If player1 y pos is bigger than obstacle y pos + height
     lda oam + 88
     sec
-    sbc #24
+    sbc #16 ; 2 sprite height
     cmp oam
+    bcs NOT_COLLIDED
+
+    ; If player1 y pos + height is bigger than obstacle y pos
+    lda p1_duck
+    cmp #0
+    beq :+
+    ; Ducking
+    lda oam
+    sec
+    sbc #16 ; height while ducking
+    jmp :++
+: ; Not ducking
+    lda oam
+    sec
+    sbc #24 ; height while standing
+: ; Resume
+    cmp oam + 88
     bcs NOT_COLLIDED
 
 COLLIDED:
@@ -1473,11 +1616,57 @@ COLLIDED:
     sta oam + 3
 
 NOT_COLLIDED:
+
     lda #1
     sta nmi_ready
 
 
     jmp mainloop
+
+
+.endproc
+
+;**************************************************************
+; Obstacle Movement / sprite change
+;**************************************************************
+.segment "CODE"
+.proc move_obstacle
+    ; Obstacle 1 x pos
+    lda obstacle1_x
+    sta oam + 88 + 3
+    sta oam + 96 + 3
+    lda obstacle1_x
+    sec 
+    adc #7
+    sta oam + 92 + 3
+    sta oam + 100 + 3
+
+    ; Obstacle 2 x pos
+    lda obstacle2_x
+    sta oam + 104 + 3
+    sta oam + 112 + 3
+    lda obstacle2_x 
+    sta oam + 108 + 3
+    sta oam + 116 + 3
+.endproc 
+.segment "CODE"
+.proc check_sprite_number_obstacle1
+    ;lda oam + 88 + 1
+    ;clc
+    ;adc #4
+    ;cmp #96
+    ;bcs RESETSPRITE
+    ;    jsr set_sprite_obstacle1
+    ;    rts
+;RESETSPRITE:
+    ;lda #83
+    ;jsr set_sprite_obstacle1
+    ;rts
+.endproc
+.segment "CODE"
+.proc set_sprite_obstacle1
+    
+    rts
 .endproc
 
 ;**************************************************************
