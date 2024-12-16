@@ -655,7 +655,7 @@ rti
     sta p1_duck
 
     ; MAX JUMP HEIGHTS
-    lda #32
+    lda #96
     sta p1_max_y
 
 
