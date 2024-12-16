@@ -1648,7 +1648,7 @@ rti
 .segment "CODE"
 .proc main
 
-ldx #0
+    ldx #0
 paletteloop:
             lda default_palette, x
             sta palette, x
@@ -1661,14 +1661,14 @@ paletteloop:
 
 
 
-jsr init_variables
+    jsr init_variables
 
-jsr display_start_game_screen
+    jsr display_start_game_screen
 
 
-jsr ppu_update
+    jsr ppu_update
 
-titleloop:
+    titleloop:
     lda nmi_ready
     cmp #0
     bne titleloop
@@ -1957,9 +1957,59 @@ COLLIDED:
 
 NOT_COLLIDED:
     ; Clock incremented
-    ldx global_clock
-    inx
-    stx global_clock
+    inc global_clock
+
+    ; Animation update
+    lda global_clock
+    and #8
+    bne :++
+
+    ; Yes 8
+    lda p1_duck
+    cmp #1
+    bne :+
+
+    ; Ducking
+    ; Change left foot tile
+    lda #114
+    sta oam + 1
+    ; Change right foot tile
+    lda #115
+    sta oam + 4 + 1
+    jmp :++++
+
+:   ; Not ducking
+    ; Change left foot tile
+    lda #104
+    sta oam + 1
+    ; Change right foot tile
+    lda #107
+    sta oam + 4 + 1
+    jmp :+++
+
+:   ; Not 8
+    lda p1_duck
+    cmp #1
+    bne :+
+
+    ; Ducking
+    ; Change left foot tile
+    lda #120
+    sta oam + 1
+    ; Change right foot tile
+    lda #121
+    sta oam + 4 + 1
+    jmp :++
+
+:   ; Not ducking
+    ; Change left foot tile
+    lda #108
+    sta oam + 1
+    ; Change right foot tile
+    lda #109
+    sta oam + 4 + 1
+
+:   ; Done
     ; If clock is smaller than 245
     cpx #245
     bcc :+
