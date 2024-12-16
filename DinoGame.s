@@ -1031,7 +1031,7 @@ rti
 
 ; highscore__________________________________________________________
     ;h
-    lda 0
+    lda #0
     ; Set sprite y
     sta oam + 192
     ; Set sprite tile
@@ -1045,7 +1045,7 @@ rti
     sta oam + 192 + 3
 
     ;i
-    lda 0
+    lda #0
     ; Set sprite y
     sta oam + 196
     ; Set sprite tile
@@ -1059,7 +1059,7 @@ rti
     sta oam + 196 + 3
 
     ;s
-    lda 0
+    lda #0
     ; Set sprite y
     sta oam + 200
     ; Set sprite tile
@@ -1073,7 +1073,7 @@ rti
     sta oam + 200 + 3
 
     ;c
-    lda 0
+    lda #0
     ; Set sprite y
     sta oam + 204
     ; Set sprite tile
@@ -1088,7 +1088,7 @@ rti
 
 
     ;0
-    lda 0
+    lda #0
     ; Set sprite y
     sta oam + 208
     ; Set sprite tile
@@ -1102,7 +1102,7 @@ rti
     sta oam + 208 + 3
 
     ;r
-    lda 0
+    lda #0
     ; Set sprite y
     sta oam + 212
     ; Set sprite tile
@@ -1116,7 +1116,7 @@ rti
     sta oam + 212 + 3
 
     ;e
-    lda 0
+    lda #0
     ; Set sprite y
     sta oam + 216
     ; Set sprite tile
