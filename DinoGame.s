@@ -55,6 +55,8 @@ jmp_speed: .res 1
 camera_x: .res 1
 current_nametable: .res 1
 global_speed: .res 1
+global_clock: .res 1
+global_clock_big: .res 1
 placeholder: .res 1
 
 ; time variables
@@ -72,9 +74,6 @@ obstacle3_x: .res 1
 obstacle1_type: .res 1
 obstacle2_type: .res 1
 obstacle3_type: .res 1
-
-; Obstacle scroll speed
-obstacle_scroll: .res 1
 
 
 ;*****************************************************************
@@ -333,10 +332,6 @@ rti
         firsttable:
             lda #0
             sta current_nametable
-            ;increase game speed every two nametable renderings
-            ldx global_speed
-            inx
-            stx global_speed
             jmp ending
 
 
@@ -1244,10 +1239,6 @@ rti
     sta obstacle2_type
     sta obstacle3_type
 
-    ; OBSTACLE SCROLL SPEED
-    lda #2
-    sta obstacle_scroll
-
     ; p1_min_y - 8 = low bird flying height
     ; p1_min_y - 16 = middle bird flying height
     ; p1_min_y - 24 = top bird flying height
@@ -1310,6 +1301,10 @@ rti
     lda #162
     sta p1_min_y
 
+    lda #0
+    sta global_speed
+    sta global_clock
+    sta global_clock_big
 
     ; JUMP VELOCITIES
     lda #1
@@ -1627,11 +1622,6 @@ rti
     sta obstacle1_x
     sta obstacle2_x
     sta obstacle3_x
-
-
-    ; OBSTACLE SCROLL SPEED
-    lda #2
-    sta obstacle_scroll
     
     ; Obstacle x pos
     lda obstacle1_x
@@ -1886,17 +1876,17 @@ CONTINUE:
     ; Calculate next object x pos
     lda obstacle1_x
     sec 
-    sbc obstacle_scroll
+    sbc global_speed
     sta obstacle1_x
 
     lda obstacle2_x
     sec
-    sbc obstacle_scroll
+    sbc global_speed
     sta obstacle2_x
 
     lda obstacle3_x
     sec
-    sbc obstacle_scroll
+    sbc global_speed
     sta obstacle3_x
 
     ; Obstacle x pos
@@ -1965,6 +1955,23 @@ COLLIDED:
     jmp playerdied
 
 NOT_COLLIDED:
+    ; Clock incremented
+    ldx global_clock
+    inx
+    stx global_clock
+    ; If clock is smaller than 245
+    cpx #245
+    bcc :+
+    ; If clock is bigger than 245, increment global_speed
+    inc global_clock_big
+    ; Reset clock
+    lda #0
+    sta global_clock
+    stx global_clock_big
+    cpx #10
+    bcc :+
+    inc global_speed
+:
     lda #1
     sta nmi_ready
     jmp mainloop
