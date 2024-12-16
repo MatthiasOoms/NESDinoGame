@@ -267,7 +267,6 @@ rti
         lda PPU_STATUS
 
         vram_set_address ($3F00)
-
         ldx #0
     loop:
             lda palette, x
@@ -277,14 +276,13 @@ rti
             bcc loop
             lda #%00011110
             sta PPU_MASK
+
             ldx #0
             stx nmi_ready
 
 
     ppu_update_end:
-
         jsr horizontal_scrollling
-
         pla
         tay
         pla
@@ -298,6 +296,16 @@ rti
 ;***************************************************************
 .segment "CODE"
 .proc horizontal_scrollling
+
+    ;if the game isnt acrually scrolling, do not edit background
+    lda global_speed
+    cmp #0
+
+    beq scroll
+
+    jsr edit_background
+
+    scroll:
 
     ; reset address latch
          lda PPU_STATUS
@@ -344,6 +352,58 @@ rti
     rts
 .endproc
 
+;***************************************************************
+; randomize tiles that just went offscreen
+;***************************************************************
+.segment "CODE"
+.proc edit_background
+
+
+        lda camera_x
+        cmp #0
+        beq end
+       ;if we are not at 0 offset, write something new to the nametable tile that just went offscreen
+
+        ;start with horizonline
+        ; check which nametable we need to address
+        lda current_nametable
+        cmp #0
+
+        beq tablezerohorizon
+
+        vram_set_address (NAME_TABLE_1_ADDRESS + 20 * 32 + camera_x - 1)
+
+        tablezerohorizon:
+
+        vram_set_address (NAME_TABLE_0_ADDRESS + 20 * 32 + camera_x - 1)
+
+        jsr rand32k
+
+        cmp #120
+        bpl plainhorizon
+
+        cmp #100
+        bpl horizon1
+
+        plainhorizon:
+        lda #1
+        jmp writehorizon
+
+        horizon1:
+        lda #2
+        jmp writehorizon
+
+        writehorizon:
+        ;write tile to memory
+                    lda PPU_STATUS
+
+        sta PPU_VRAM_IO
+        vram_clear_address
+
+        end: 
+        rts
+
+.endproc
 
 ;***************************************************************
 ; display game screen
@@ -1674,8 +1734,10 @@ jsr init_variables
 
 jsr display_start_game_screen
 
-
 jsr ppu_update
+
+jsr horizontal_scrollling
+
 
 titleloop:
     lda nmi_ready
@@ -1965,6 +2027,7 @@ COLLIDED:
     jmp playerdied
 
 NOT_COLLIDED:
+
     lda #1
     sta nmi_ready
     jmp mainloop
@@ -1972,35 +2035,21 @@ NOT_COLLIDED:
 
 playerdied:
 
-    lda #1
-    sta nmi_ready
-    ; clear gameover texts when nmi is ready
-    waittodieloop:
-    lda nmi_ready
-    cmp #0
-    bne waittodieloop
-
     jsr record_new_highscore
     jsr display_gameover_screen
     jsr horizontal_scrollling
 
-   
     lda #1
     sta nmi_ready
 
 
 gameoverloop:
+    lda nmi_ready
+    cmp #0
     jsr gamepad_poll
     lda gamepad
     and #PAD_A|PAD_B|PAD_START|PAD_SELECT
     beq gameoverloop
-
-
-    ; clear gameover texts when nmi is ready
-    waittorestartloop:
-    lda nmi_ready
-    cmp #0
-    bne waittorestartloop
 
     ;prepare game for playing 
     jsr reset_game
@@ -2010,6 +2059,8 @@ gameoverloop:
     sta global_speed
     jsr horizontal_scrollling
 
+    lda #1
+    sta nmi_ready
 
     jmp mainloop
 
