@@ -571,7 +571,7 @@ rti
 
     loop:
     ;right most score char plus the index for the used tile
-    ldx #248 + 1
+    ldx #188 + 1
 
     subloop:
     ;if it is not a nine yet, simply increment this number
@@ -602,6 +602,70 @@ rti
     rts
 
 .endproc
+
+;***************************************************************
+; update score
+;***************************************************************
+.segment "CODE"
+.proc record_new_highscore
+
+    ;compare sprite tiles - if there is ever an inequality, that decides which number is bigger
+    ;eight numbers to iterate over
+    ;current score stored from 160
+    ;biggest score stored from 220
+    ldy #0
+
+    ldx #160 + 1
+
+    loop:
+        lda oam + 60, X
+        cmp oam, X
+        beq checknext
+        bmi store
+
+        jmp end
+            
+        checknext:
+            ;increment the x and then compare next two numbers
+            inx
+            inx
+            inx
+            inx
+
+            iny 
+            cpy #9
+            bmi  loop
+
+
+    store:
+
+        ldy #0
+
+        ldx #160 + 1
+
+            storeloop:
+
+                lda oam, X
+                sta oam + 60, X
+                
+                inx
+                inx
+                inx
+                inx
+
+                iny 
+                cpy #9
+                bmi  storeloop
+
+
+
+    end:
+
+
+    rts
+
+.endproc
+
 
 
 ;***************************************************************
@@ -931,7 +995,7 @@ rti
     lda #28 * 8
     sta oam + 216 + 3
 
-
+    ;BEST HIGHSCORE IN THIS SESSION
     ;0 one
     lda #18
     ; Set sprite y
@@ -1044,6 +1108,118 @@ rti
     lda #28 * 8
     sta oam + 248 + 3
 
+    ; current score for this run
+    ;0 one
+    lda #28
+    ; Set sprite y
+    sta oam + 160
+    ; Set sprite tile
+    lda #27
+    sta oam + 160 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 160 + 2
+    ; Set sprite x
+    lda #21 * 8
+    sta oam + 160 + 3
+    
+    ;0 two
+    lda #28
+    ; Set sprite y
+    sta oam + 164
+    ; Set sprite tile
+    lda #27
+    sta oam + 164 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 164 + 2
+    ; Set sprite x
+    lda #22 * 8
+    sta oam + 164 + 3
+
+    ;0 three
+    lda #28
+    ; Set sprite y
+    sta oam + 168
+    ; Set sprite tile
+    lda #27
+    sta oam + 168 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 168 + 2
+    ; Set sprite x
+    lda #23 * 8
+    sta oam + 168 + 3
+
+    ;0 four
+    lda #28
+    ; Set sprite y
+    sta oam + 172
+    ; Set sprite tile
+    lda #27
+    sta oam + 172 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 172 + 2
+    ; Set sprite x
+    lda #24 * 8
+    sta oam + 172 + 3
+
+    ;0 five
+    lda #28
+    ; Set sprite y
+    sta oam + 176
+    ; Set sprite tile
+    lda #27
+    sta oam + 176 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 176 + 2
+    ; Set sprite x
+    lda #25 * 8
+    sta oam + 176 + 3
+
+    ;0 six
+    lda #28
+    ; Set sprite y
+    sta oam + 180
+    ; Set sprite tile
+    lda #27
+    sta oam + 180 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 180 + 2
+    ; Set sprite x
+    lda #26 * 8
+    sta oam + 180 + 3
+
+    ;0 seven
+    lda #28
+    ; Set sprite y
+    sta oam + 184
+    ; Set sprite tile
+    lda #27
+    sta oam + 184 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 184 + 2
+    ; Set sprite x
+    lda #27 * 8
+    sta oam + 184 + 3
+
+    ;0 eight
+    lda #28
+    ; Set sprite y
+    sta oam + 188
+    ; Set sprite tile
+    lda #27
+    sta oam + 188 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 188 + 2
+    ; Set sprite x
+    lda #28 * 8
+    sta oam + 188 + 3
     ; highscore__________________________________________________________
 
 ; misc__________________________________________________________
@@ -1121,7 +1297,360 @@ rti
     rts
 .endproc
 
+;***************************************************************
+; init_variables: initialises various values in zero page memory
+;***************************************************************
+.segment "CODE"
+.proc reset_game
+    ; Set the jump speed
+    lda #3
+    sta jmp_speed
 
+    ; MIN JUMP HEIGHTS
+    lda #162
+    sta p1_min_y
+
+
+    ; JUMP VELOCITIES
+    lda #1
+    sta p1_dy
+
+    ; DUCK BOOLS
+    lda #0
+    sta p1_duck
+
+    ; MAX JUMP HEIGHTS
+    lda #96
+    sta p1_max_y
+
+
+    ; Set the sprite attributes
+    ; oam = left foot
+    ; oam + 4 = right foot
+    ; oam + 8 = tail
+    ; oam + 12 = middle body
+    ; oam + 16 = empty left of head
+    ; oam + 20 = left head
+    ; oam + 24 = empty right of feet
+    ; oam + 28 = hands
+    ; oam + 32 = right head
+    ; oam + 36 = bottom ducking head
+    ; oam + 40 = top ducking head
+    ; oam + 88 = obstacle 1
+; P1__________________________________________________________
+    lda p1_min_y
+    ; Set sprite y      oam = left foot
+    sta oam
+    ; Set sprite tile
+    lda #104
+    sta oam + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 3
+
+    lda p1_min_y
+    ; Set sprite y      oam + 4 = right foot
+    sta oam + 4
+    ; Set sprite tile
+    lda #105
+    sta oam + 4 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 4 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 4 + 3
+
+    lda p1_min_y
+    sec
+    sbc #8
+    ; Set sprite y      oam + 8 = tail
+    sta oam + 8
+    ; Set sprite tile
+    lda #102
+    sta oam + 8 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 8 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 8 + 3
+
+    lda p1_min_y
+    sec
+    sbc #8
+    ; Set sprite y      oam + 12 = middle body
+    sta oam + 12
+    ; Set sprite tile
+    lda #103
+    sta oam + 12 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 12 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 12 + 3
+
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y      oam + 16 = empty left of head
+    sta oam + 16
+    ; Set sprite tile
+    lda #0
+    sta oam + 16 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 16 + 2
+    ; Set sprite x
+    lda #48
+    sta oam + 16 + 3
+
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y      oam + 20 = left head
+    sta oam + 20
+    ; Set sprite tile
+    lda #100
+    sta oam + 20 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 20 + 2
+    ; Set sprite x
+    lda #56
+    sta oam + 20 + 3
+
+    lda p1_min_y
+    ; Set sprite y      oam + 24 = empty right of feet
+    sta oam + 24
+    ; Set sprite tile
+    lda #0
+    sta oam + 24 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 24 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 24 + 3
+
+    lda p1_min_y
+    sec
+    sbc #8
+    ; Set sprite y      oam + 28 = hands
+    sta oam + 28
+    ; Set sprite tile
+    lda #106
+    sta oam + 28 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 28 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 28 + 3
+
+    lda p1_min_y
+    sec
+    sbc #16
+    ; Set sprite y      oam + 32 = right head
+    sta oam + 32
+    ; Set sprite tile
+    lda #101
+    sta oam + 32 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 32 + 2
+    ; Set sprite x
+    lda #64
+    sta oam + 32 + 3
+
+    lda p1_min_y
+    ; Set sprite y      oam + 36 = bottom ducking head
+    sta oam + 36
+    ; Set sprite tile
+    lda #0
+    sta oam + 36 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 36 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 36 + 3
+
+    lda p1_min_y
+    sec
+    sbc #8
+    ; Set sprite y      oam + 40 = top ducking head
+    sta oam + 40
+    ; Set sprite tile
+    lda #0
+    sta oam + 40 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 40 + 2
+    ; Set sprite x
+    lda #72
+    sta oam + 40 + 3
+    ;P1__________________________________________________________
+
+; highscore__________________________________________________________
+   
+    ; current score for this run
+    ;0 one
+    lda #28
+    ; Set sprite y
+    sta oam + 160
+    ; Set sprite tile
+    lda #27
+    sta oam + 160 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 160 + 2
+    ; Set sprite x
+    lda #21 * 8
+    sta oam + 160 + 3
+    
+    ;0 two
+    lda #28
+    ; Set sprite y
+    sta oam + 164
+    ; Set sprite tile
+    lda #27
+    sta oam + 164 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 164 + 2
+    ; Set sprite x
+    lda #22 * 8
+    sta oam + 164 + 3
+
+    ;0 three
+    lda #28
+    ; Set sprite y
+    sta oam + 168
+    ; Set sprite tile
+    lda #27
+    sta oam + 168 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 168 + 2
+    ; Set sprite x
+    lda #23 * 8
+    sta oam + 168 + 3
+
+    ;0 four
+    lda #28
+    ; Set sprite y
+    sta oam + 172
+    ; Set sprite tile
+    lda #27
+    sta oam + 172 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 172 + 2
+    ; Set sprite x
+    lda #24 * 8
+    sta oam + 172 + 3
+
+    ;0 five
+    lda #28
+    ; Set sprite y
+    sta oam + 176
+    ; Set sprite tile
+    lda #27
+    sta oam + 176 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 176 + 2
+    ; Set sprite x
+    lda #25 * 8
+    sta oam + 176 + 3
+
+    ;0 six
+    lda #28
+    ; Set sprite y
+    sta oam + 180
+    ; Set sprite tile
+    lda #27
+    sta oam + 180 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 180 + 2
+    ; Set sprite x
+    lda #26 * 8
+    sta oam + 180 + 3
+
+    ;0 seven
+    lda #28
+    ; Set sprite y
+    sta oam + 184
+    ; Set sprite tile
+    lda #27
+    sta oam + 184 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 184 + 2
+    ; Set sprite x
+    lda #27 * 8
+    sta oam + 184 + 3
+
+    ;0 eight
+    lda #28
+    ; Set sprite y
+    sta oam + 188
+    ; Set sprite tile
+    lda #27
+    sta oam + 188 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 188 + 2
+    ; Set sprite x
+    lda #28 * 8
+    sta oam + 188 + 3
+    ; highscore__________________________________________________________
+
+; misc__________________________________________________________
+
+    ; set initial x scroll value as zero
+    lda #0
+    sta camera_x
+    lda #$00
+    sta current_nametable
+    lda #0
+    sta global_speed
+
+    ; OBSTACLE X POS
+    lda #255
+    sta obstacle1_x
+    sta obstacle2_x
+    sta obstacle3_x
+
+
+    ; OBSTACLE SCROLL SPEED
+    lda #2
+    sta obstacle_scroll
+    
+    ; Obstacle x pos
+    lda obstacle1_x
+    sta oam + 88 + 3
+
+   
+    ; Obstacle x pos
+    lda obstacle2_x
+    sta oam + 92 + 3
+
+    ; Obstacle x pos
+    lda obstacle3_x
+    sta oam + 96 + 3
+
+    ; misc__________________________________________________________
+
+
+    rts
+.endproc
 ;**************************************************************
 ; Main application logic section includes the game loop
 ;**************************************************************
@@ -1451,6 +1980,7 @@ playerdied:
     cmp #0
     bne waittodieloop
 
+    jsr record_new_highscore
     jsr display_gameover_screen
     jsr horizontal_scrollling
 
@@ -1473,7 +2003,7 @@ gameoverloop:
     bne waittorestartloop
 
     ;prepare game for playing 
-    jsr init_variables
+    jsr reset_game
     jsr clear_gameover_texts
     ;start scrolling
     lda #1
