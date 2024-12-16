@@ -36,23 +36,18 @@ INES_SRAM = 0
 .segment "ZEROPAGE"
 gamepad: .res 1
 
-is_game_in_main: .res 1
-
 ; randomizer seeds
 seed_0: .res 2
 seed_2: .res 2
 
 ; Y position of the players
 p1_min_y: .res 1
-p2_min_y: .res 1
 
 ; Max Y position of the players
 p1_max_y: .res 1
-p2_max_y: .res 1
 
 ; Y velocity of the players ; $FF = jumping ; $01 = falling/not jumping
 p1_dy: .res 1
-p2_dy: .res 1
 
 jmp_speed: .res 1
 
@@ -67,7 +62,6 @@ time: .res 2
 lasttime: .res 1
 
 p1_duck: .res 1
-p2_duck: .res 1
 
 ; Obstacle x pos
 obstacle1_x: .res 1
@@ -236,6 +230,7 @@ rti
     tya
     pha
 
+
     ; increment time tick counter
     inc time
     bne :+
@@ -284,21 +279,12 @@ rti
             sta PPU_MASK
             ldx #0
             stx nmi_ready
+
+
     ppu_update_end:
-        lda is_game_in_main
-        cmp #1
-        beq start_scrolling
 
-        pla
-        tay
-        pla
-        tax
-        pla
-        rti
+        jsr horizontal_scrollling
 
-    start_scrolling:
-    
-        jsr horizontal_scrollling 
         pla
         tay
         pla
@@ -365,71 +351,54 @@ rti
 .segment "CODE"
 .proc display_start_game_screen
 
-    vram_set_address (NAME_TABLE_0_ADDRESS + 12 * 32)
+    vram_set_address (NAME_TABLE_0_ADDRESS + 20 * 32)
 	assign_address_to_ram text_address, horizon_line_one
 	jsr write_text
 
-    vram_set_address (NAME_TABLE_0_ADDRESS + 13 * 32)
+    vram_set_address (NAME_TABLE_0_ADDRESS + 21 * 32)
 	assign_address_to_ram text_address, horizon_subline_one
 	jsr write_text
 
-    vram_set_address (NAME_TABLE_0_ADDRESS + 28 * 32)
-	assign_address_to_ram text_address, horizon_line_one
-	jsr write_text
-
-    vram_set_address (NAME_TABLE_0_ADDRESS + 29 * 32)
-	assign_address_to_ram text_address, horizon_subline_one
-	jsr write_text
-
-
-
-    vram_set_address (NAME_TABLE_1_ADDRESS + 12 * 32)
+    vram_set_address (NAME_TABLE_1_ADDRESS + 20 * 32)
 	assign_address_to_ram text_address, horizon_line_two
 	jsr write_text
 
-    vram_set_address (NAME_TABLE_1_ADDRESS + 13 * 32)
+    vram_set_address (NAME_TABLE_1_ADDRESS + 21 * 32)
 	assign_address_to_ram text_address, horizon_subline_two
 	jsr write_text
 
-    vram_set_address (NAME_TABLE_1_ADDRESS + 28 * 32)
-	assign_address_to_ram text_address, horizon_line_two
-	jsr write_text
-
-    vram_set_address (NAME_TABLE_1_ADDRESS + 29 * 32)
-	assign_address_to_ram text_address, horizon_subline_two
-	jsr write_text
-
+    
 
     ; Write our game title text
-	vram_set_address (NAME_TABLE_0_ADDRESS + 2)
+	vram_set_address (NAME_TABLE_0_ADDRESS +  32 + 2)
 	assign_address_to_ram text_address, game_title_text
 	jsr write_text
 
     ; Write by text
-	vram_set_address (NAME_TABLE_0_ADDRESS + 32 + 2)
+	vram_set_address (NAME_TABLE_0_ADDRESS + 2 * 32 + 2)
 	assign_address_to_ram text_address, by_text
 	jsr write_text
 
     
     ; Write yenzo name
-	vram_set_address (NAME_TABLE_0_ADDRESS + 2 * 32 + 2)
+	vram_set_address (NAME_TABLE_0_ADDRESS + 3 * 32 + 2)
 	assign_address_to_ram text_address, yenzo_name_text
 	jsr write_text
 
     ; Write matt name
-	vram_set_address (NAME_TABLE_0_ADDRESS + 3 * 32 + 2)
+	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32 + 2)
 	assign_address_to_ram text_address, matt_name_text
 	jsr write_text
 
 
     ; Write hades name
-	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32 + 2)
+	vram_set_address (NAME_TABLE_0_ADDRESS + 5 * 32 + 2)
 	assign_address_to_ram text_address, hades_name_text
 	jsr write_text
 
 
     ; Write press a to play
-	vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32 + 2)
+	vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32 + 2)
 	assign_address_to_ram text_address, press_to_play_text
 	jsr write_text
 
@@ -509,13 +478,13 @@ rti
 
 
     ; Write game over text
-	vram_set_address (NAME_TABLE_0_ADDRESS +  4 * 32 + 2 + 9)
+	vram_set_address (NAME_TABLE_0_ADDRESS +  6 * 32 + 2 + 9)
 	assign_address_to_ram text_address, gameover_text
 	jsr write_text
 
 
     ; Write press a to play
-	vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32 + 2 + 6)
+	vram_set_address (NAME_TABLE_0_ADDRESS + 8 * 32 + 2 + 6)
 	assign_address_to_ram text_address, press_to_play_text
 	jsr write_text
 
@@ -529,34 +498,34 @@ rti
 .proc clear_gamestart_texts
 
     ; clear our game title text
-	vram_set_address (NAME_TABLE_0_ADDRESS)
+	vram_set_address (NAME_TABLE_0_ADDRESS + 1 * 32)
 	jsr clear_background_line
 
 
     ; clear by text
-	vram_set_address (NAME_TABLE_0_ADDRESS + 1 * 32)
+	vram_set_address (NAME_TABLE_0_ADDRESS + 2 * 32)
 	jsr clear_background_line
 
     
     ; clear yenzo name
-	vram_set_address (NAME_TABLE_0_ADDRESS + 2 * 32)
-	jsr clear_background_line
-
-
-
-    ; clear matt name
 	vram_set_address (NAME_TABLE_0_ADDRESS + 3 * 32)
 	jsr clear_background_line
 
 
 
-    ; clear hades name
+    ; clear matt name
 	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32)
 	jsr clear_background_line
 
 
+
+    ; clear hades name
+	vram_set_address (NAME_TABLE_0_ADDRESS + 5 * 32)
+	jsr clear_background_line
+
+
     ; clear instruction 
-	vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32)
+	vram_set_address (NAME_TABLE_0_ADDRESS + 7 * 32)
 	jsr clear_background_line
 
 
@@ -575,11 +544,11 @@ rti
 
 
     ; game over text
-	vram_set_address (NAME_TABLE_0_ADDRESS + 4 * 32)
+	vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32)
 	jsr clear_background_line
 
     ; oress a text
-	vram_set_address (NAME_TABLE_0_ADDRESS + 6 * 32)
+	vram_set_address (NAME_TABLE_0_ADDRESS + 8 * 32)
 	jsr clear_background_line
 
     rts
@@ -668,35 +637,27 @@ rti
 ;***************************************************************
 .segment "CODE"
 .proc init_variables
-    ; set bool of is in main
-    lda #0
-    sta is_game_in_main
-
     ; Set the jump speed
     lda #3
     sta jmp_speed
 
     ; MIN JUMP HEIGHTS
-    lda #100
+    lda #162
     sta p1_min_y
-    lda #228
-    sta p2_min_y
+
 
     ; JUMP VELOCITIES
     lda #1
     sta p1_dy
-    sta p2_dy
 
     ; DUCK BOOLS
     lda #0
     sta p1_duck
-    sta p2_duck
 
     ; MAX JUMP HEIGHTS
     lda #32
     sta p1_max_y
-    lda #158
-    sta p2_max_y
+
 
     ; Set the sprite attributes
     ; oam = left foot
@@ -870,168 +831,9 @@ rti
     sta oam + 40 + 3
     ;P1__________________________________________________________
 
-; P2__________________________________________________________
-    lda p2_min_y
-    ; Set sprite y
-    sta oam + 44
-    ; Set sprite tile
-    lda #105
-    sta oam + 44 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 44 + 2
-    ; Set sprite x
-    lda #48
-    sta oam + 44 + 3
-
-    lda p2_min_y
-    ; Set sprite y
-    sta oam + 48
-    ; Set sprite tile
-    lda #106
-    sta oam + 48 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 48 + 2
-    ; Set sprite x
-    lda #56
-    sta oam + 48 + 3
-
-    lda p2_min_y
-    sec
-    sbc #8
-    ; Set sprite y
-    sta oam + 52
-    ; Set sprite tile
-    lda #102
-    sta oam + 52 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 52 + 2
-    ; Set sprite x
-    lda #48
-    sta oam + 52 + 3
-
-    lda p2_min_y
-    sec
-    sbc #8
-    ; Set sprite y
-    sta oam + 56
-    ; Set sprite tile
-    lda #103
-    sta oam + 56 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 56 + 2
-    ; Set sprite x
-    lda #56
-    sta oam + 56 + 3
-
-    lda p2_min_y
-    sec
-    sbc #16
-    ; Set sprite y
-    sta oam + 60
-    ; Set sprite tile
-    lda #255
-    sta oam + 60 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 60 + 2
-    ; Set sprite x
-    lda #48
-    sta oam + 60 + 3
-
-    lda p2_min_y
-    sec
-    sbc #16
-    ; Set sprite y
-    sta oam + 64
-    ; Set sprite tile
-    lda #100
-    sta oam + 64 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 64 + 2
-    ; Set sprite x
-    lda #56
-    sta oam + 64 + 3
-
-    lda p2_min_y
-    ; Set sprite y
-    sta oam + 68
-    ; Set sprite tile
-    lda #255
-    sta oam + 68 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 68 + 2
-    ; Set sprite x
-    lda #64
-    sta oam + 68 + 3
-
-    lda p2_min_y
-    sec
-    sbc #8
-    ; Set sprite y
-    sta oam + 72
-    ; Set sprite tile
-    lda #104
-    sta oam + 72 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 72 + 2
-    ; Set sprite x
-    lda #64
-    sta oam + 72 + 3
-
-    lda p2_min_y
-    sec
-    sbc #16
-    ; Set sprite y
-    sta oam + 76
-    ; Set sprite tile
-    lda #101
-    sta oam + 76 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 76 + 2
-    ; Set sprite x
-    lda #64
-    sta oam + 76 + 3
-
-    lda p2_min_y
-    ; Set sprite y
-    sta oam + 80
-    ; Set sprite tile
-    lda #119
-    sta oam + 80 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 80 + 2
-    ; Set sprite x
-    lda #72
-    sta oam + 80 + 3
-
-    lda p2_min_y
-    sec
-    sbc #8
-    ; Set sprite y
-    sta oam + 84
-    ; Set sprite tile
-    lda #117
-    sta oam + 84 + 1
-    ; Set sprite attributes
-    lda #0
-    sta oam + 84 + 2
-    ; Set sprite x
-    lda #72
-    sta oam + 84 + 3
-    ; P2__________________________________________________________
-
 ; highscore__________________________________________________________
     ;h
-    lda #0
+    lda #8
     ; Set sprite y
     sta oam + 192
     ; Set sprite tile
@@ -1045,7 +847,7 @@ rti
     sta oam + 192 + 3
 
     ;i
-    lda #0
+    lda #8
     ; Set sprite y
     sta oam + 196
     ; Set sprite tile
@@ -1059,7 +861,7 @@ rti
     sta oam + 196 + 3
 
     ;s
-    lda #0
+    lda #8
     ; Set sprite y
     sta oam + 200
     ; Set sprite tile
@@ -1073,7 +875,7 @@ rti
     sta oam + 200 + 3
 
     ;c
-    lda #0
+    lda #8
     ; Set sprite y
     sta oam + 204
     ; Set sprite tile
@@ -1088,7 +890,7 @@ rti
 
 
     ;0
-    lda #0
+    lda #8
     ; Set sprite y
     sta oam + 208
     ; Set sprite tile
@@ -1102,7 +904,7 @@ rti
     sta oam + 208 + 3
 
     ;r
-    lda #0
+    lda #8
     ; Set sprite y
     sta oam + 212
     ; Set sprite tile
@@ -1116,7 +918,7 @@ rti
     sta oam + 212 + 3
 
     ;e
-    lda #0
+    lda #8
     ; Set sprite y
     sta oam + 216
     ; Set sprite tile
@@ -1131,7 +933,7 @@ rti
 
 
     ;0 one
-    lda #8
+    lda #18
     ; Set sprite y
     sta oam + 220
     ; Set sprite tile
@@ -1145,7 +947,7 @@ rti
     sta oam + 220 + 3
     
     ;0 two
-    lda #8
+    lda #18
     ; Set sprite y
     sta oam + 224
     ; Set sprite tile
@@ -1159,7 +961,7 @@ rti
     sta oam + 224 + 3
 
     ;0 three
-    lda #8
+    lda #18
     ; Set sprite y
     sta oam + 228
     ; Set sprite tile
@@ -1173,7 +975,7 @@ rti
     sta oam + 228 + 3
 
     ;0 four
-    lda #8
+    lda #18
     ; Set sprite y
     sta oam + 232
     ; Set sprite tile
@@ -1187,7 +989,7 @@ rti
     sta oam + 232 + 3
 
     ;0 five
-    lda #8
+    lda #18
     ; Set sprite y
     sta oam + 236
     ; Set sprite tile
@@ -1201,7 +1003,7 @@ rti
     sta oam + 236 + 3
 
     ;0 six
-    lda #8
+    lda #18
     ; Set sprite y
     sta oam + 240
     ; Set sprite tile
@@ -1215,7 +1017,7 @@ rti
     sta oam + 240 + 3
 
     ;0 seven
-    lda #8
+    lda #18
     ; Set sprite y
     sta oam + 244
     ; Set sprite tile
@@ -1229,7 +1031,7 @@ rti
     sta oam + 244 + 3
 
     ;0 eight
-    lda #8
+    lda #18
     ; Set sprite y
     sta oam + 248
     ; Set sprite tile
@@ -1251,7 +1053,7 @@ rti
     sta camera_x
     lda #$00
     sta current_nametable
-    lda #1
+    lda #0
     sta global_speed
 
     ; OBSTACLE X POS
@@ -1343,12 +1145,14 @@ jsr init_variables
 
 jsr display_start_game_screen
 
+
 jsr ppu_update
 
-;this makes the screen display correctly, for some reason it does not do it correctly otherwise
-jsr horizontal_scrollling
-
 titleloop:
+    lda nmi_ready
+    cmp #0
+    bne titleloop
+
     jsr gamepad_poll
     lda gamepad
     and #PAD_A|PAD_B|PAD_START|PAD_SELECT
@@ -1365,15 +1169,18 @@ titleloop:
     sbc time
     sta seed_2+1
 
-    lda #1
-    sta is_game_in_main
-
-    ; clear name texts when nmi is ready
-    waittoclearloop:
-    lda nmi_ready
-    cmp #0
-    bne waittoclearloop
+    ;clear text
     jsr clear_gamestart_texts
+
+    ;start scrolling
+    lda #1
+    sta global_speed
+    jsr horizontal_scrollling
+
+    ;set nmi ready
+    lda #1
+    sta nmi_ready
+
 
 
 
@@ -1635,8 +1442,19 @@ NOT_COLLIDED:
 
 
 playerdied:
+
+    lda #1
+    sta nmi_ready
+    ; clear gameover texts when nmi is ready
+    waittodieloop:
+    lda nmi_ready
     cmp #0
+    bne waittodieloop
+
     jsr display_gameover_screen
+    jsr horizontal_scrollling
+
+   
     lda #1
     sta nmi_ready
 
@@ -1656,9 +1474,13 @@ gameoverloop:
 
     ;prepare game for playing 
     jsr init_variables
-    lda #1
-    sta is_game_in_main
     jsr clear_gameover_texts
+    ;start scrolling
+    lda #1
+    sta global_speed
+    jsr horizontal_scrollling
+
+
     jmp mainloop
 
 
