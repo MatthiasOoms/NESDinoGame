@@ -74,7 +74,12 @@ obstacle1_x: .res 1
 obstacle2_x: .res 1
 
 ; Obstacle active
+obstacle1_active: .res 1
 obstacle2_active: .res 1
+
+; Obstacle active
+obstacle1_has_changed: .res 1
+obstacle2_has_changed: .res 1
 
 ; Obstacle type (1 = cactus, 2 = double cactus, 3 = bird)
 obstacle1_type: .res 1
@@ -1118,6 +1123,11 @@ rts
 
     ;highscore__________________________________________________________
 
+    ; set bool to change sprite
+    ;lda #0
+    ;sta obstacle1_change_sprite
+    ;sta obstacle2_change_sprite
+
     ; set initial x scroll value as zero
     lda #0
     sta camera_x
@@ -1131,6 +1141,15 @@ rts
     sta obstacle1_x
     sta obstacle2_x
 
+    lda #1
+    sta obstacle1_active
+    lda #0
+    sta obstacle2_active
+
+    lda #0
+    sta obstacle1_has_changed
+    sta obstacle2_has_changed
+
     ; OBSTACLE TYPE
     lda #%00000000
     sta obstacle1_type
@@ -1143,9 +1162,9 @@ rts
     lda #2
     sta obstacle_scroll
 
-    ; p1_min_y - 8 = low bird flying height
-    ; p1_min_y - 16 = middle bird flying height
-    ; p1_min_y - 24 = top bird flying height
+    ; p1_min_y - 16 = low bird flying height
+    ; p1_min_y - 32 = middle bird flying height
+    ; p1_min_y - 48 = top bird flying height
 
 ; Obstacle 1 88-100
     ; left top
@@ -1178,8 +1197,6 @@ rts
     sta oam + 92 + 2
     ; Obstacle x pos
     lda obstacle1_x
-    sec
-    sbc #7
     sta oam + 92 + 3
 
     ; left bottom
@@ -1208,14 +1225,14 @@ rts
     sta oam + 100 + 2
     ; Obstacle x pos
     lda obstacle1_x
-    sec
-    sbc #7
     sta oam + 100 + 3 
 
 ; Obstacle 2 104 - 124 (bird or second cacti)
     ; left top
     ; Obstacle y pos on ground
-    lda p1_min_y + 8
+    lda p1_min_y
+    clc
+    sbc #48
     sta oam + 104
     ; Set sprite tile
     lda #0
@@ -1229,7 +1246,9 @@ rts
 
     ; right top
     ; Obstacle y pos on ground
-    lda p1_min_y + 8
+    lda p1_min_y
+    clc
+    sbc #48
     sta oam + 108
     ; Set sprite tile
     lda #0
@@ -1238,12 +1257,14 @@ rts
     lda #0
     sta oam + 108 + 2
     ; Obstacle x pos
-    lda obstacle2_x + 8
+    lda obstacle2_x
     sta oam + 108 + 3
 
     ; left bottom
     ; Obstacle y pos on ground
     lda p1_min_y
+    clc
+    sbc #40
     sta oam + 112
     ; Set sprite tile
     lda #0
@@ -1258,6 +1279,8 @@ rts
     ; right bottom
     ; Obstacle y pos on ground
     lda p1_min_y
+    clc
+    sbc #40
     sta oam + 116
     ; Set sprite tile
     lda #0
@@ -1272,6 +1295,8 @@ rts
     ; optional tail
     ; Obstacle y pos on ground
     lda p1_min_y
+    clc
+    sbc #40
     sta oam + 120
     ; Set sprite tile
     lda #0
@@ -1286,6 +1311,8 @@ rts
     ; down wing
     ; Obstacle y pos on ground
     lda p1_min_y
+    clc
+    sbc #32
     sta oam + 124
     ; Set sprite tile
     lda #0
@@ -1294,7 +1321,7 @@ rts
     lda #0
     sta oam + 124 + 2
     ; Obstacle x pos
-    lda obstacle2_x + 8
+    lda obstacle2_x
     sta oam + 124 + 3
 
 
@@ -1557,7 +1584,9 @@ CONTINUE:
     sta obstacle2_x
 
     ; Obstacle x pos
+    jsr set_birdsprite_obstacle2
     jsr move_obstacle
+    jsr if_sprite_change_needed
 
     ; If player1 x pos is smaller than obstacle x pos + width
     lda obstacle1_x
@@ -1616,10 +1645,8 @@ COLLIDED:
     sta oam + 3
 
 NOT_COLLIDED:
-
     lda #1
     sta nmi_ready
-
 
     jmp mainloop
 
@@ -1629,6 +1656,34 @@ NOT_COLLIDED:
 ;**************************************************************
 ; Obstacle Movement / sprite change
 ;**************************************************************
+.segment "CODE"
+.proc if_sprite_change_needed
+    lda obstacle1_has_changed
+    cmp #0
+    bne SETACTIVE
+
+    lda obstacle1_active
+    cmp #1
+    bne RETURN
+
+    lda obstacle1_x
+    cmp #8
+    bcs RETURN
+    jsr check_sprite_number_obstacle1
+    rts
+SETACTIVE:
+    lda obstacle1_x
+    cmp #8
+    bcc RETURN
+    lda #1
+    sta obstacle1_active
+    lda #0
+    sta obstacle1_has_changed
+    jmp if_sprite_change_needed
+
+RETURN:  
+    rts
+.endproc
 .segment "CODE"
 .proc move_obstacle
     ; Obstacle 1 x pos
@@ -1641,34 +1696,172 @@ NOT_COLLIDED:
     sta oam + 92 + 3
     sta oam + 100 + 3
 
-    ; Obstacle 2 x pos
+    ; setup obstacle 2 x
     lda obstacle2_x
     sta oam + 104 + 3
     sta oam + 112 + 3
-    lda obstacle2_x 
+    lda obstacle2_x
+    clc
+    adc #8
     sta oam + 108 + 3
     sta oam + 116 + 3
+    sta oam + 124 + 3
+    lda obstacle2_x
+    clc
+    adc #16
+    sta oam + 120 + 3
+    
+    rts
 .endproc 
 .segment "CODE"
 .proc check_sprite_number_obstacle1
-    ;lda oam + 88 + 1
-    ;clc
-    ;adc #4
-    ;cmp #96
-    ;bcs RESETSPRITE
-    ;    jsr set_sprite_obstacle1
-    ;    rts
-;RESETSPRITE:
-    ;lda #83
-    ;jsr set_sprite_obstacle1
-    ;rts
+    lda oam + 88 + 1
+    clc
+    adc #3
+    cmp #95
+    beq RESETSPRITE
+        lda oam + 88 + 1
+        clc
+        adc #3
+        jsr set_sprite_obstacle1
+        rts
+
+RESETSPRITE:
+    lda #83
+    jsr set_sprite_obstacle1
+    rts
 .endproc
 .segment "CODE"
-.proc set_sprite_obstacle1
-    
+.proc check_sprite_number_obstacle2
+    lda oam + 104 + 1
+    clc
+    adc #3
+    cmp #95
+    beq RESETSPRITE
+        lda oam + 88 + 1
+        clc
+        adc #3
+        jsr set_sprite_obstacle1
+        rts
+
+RESETSPRITE:
+    lda #83
+    jsr set_sprite_obstacle1
     rts
 .endproc
 
+.segment "CODE"
+.proc set_sprite_obstacle1
+    clc
+    adc #1
+    sta oam + 88 + 1
+    adc #1
+    sta oam + 92 + 1
+    adc #1
+    sta oam + 96 + 1
+    adc #1
+    sta oam + 100 + 1
+
+    lda #0
+    sta obstacle1_active
+    lda #1
+    sta obstacle1_has_changed
+    rts
+.endproc
+
+.segment "CODE"
+.proc set_birdsprite_obstacle2
+    lda #122
+    sta oam + 104 + 1
+    lda #123
+    sta oam + 108 + 1
+    lda #124
+    sta oam + 112 + 1
+    lda #125
+    sta oam + 116 + 1
+    lda #126
+    sta oam + 120 + 1
+    lda #127
+    sta oam + 124 + 1
+  
+    ; setup obstacle 2 y
+    jsr set_birdsprite_height
+    rts
+.endproc
+
+.segment "CODE"
+.proc set_birdsprite_height
+    lda #32
+    sta oam + 104
+    sta oam + 108
+    lda #40
+    sta oam + 112
+    sta oam + 116
+    sta oam + 120
+    lda #48
+    sta oam + 124
+    rts
+.endproc
+
+.segment "CODE"
+.proc set_rand_cactisprite_obstacle2
+    clc
+    adc #1
+    sta oam + 104 + 1
+    adc #1
+    sta oam + 108 + 1
+    adc #1
+    sta oam + 112 + 1
+    adc #1
+    sta oam + 116 + 1
+
+    lda #0
+    sta oam + 120 + 1
+    sta oam + 124 + 1
+
+    lda #0
+    sta obstacle2_active
+    lda #1
+    sta obstacle2_has_changed
+    rts
+.endproc
+.segment "CODE"
+.proc set_obstacles_not_active
+    ; set obstacle 1 hidden
+    lda #0
+    sta oam + 88 + 1
+    sta oam + 92 + 1
+    sta oam + 96 + 1
+    sta oam + 100 + 1
+    
+    lda #255
+    clc 
+    adc #1
+    sta oam + 88 + 3
+    sta oam + 96 + 3
+    sta oam + 92 + 3
+    sta oam + 100 + 3
+
+    ; set obstacle 2 hidden
+    lda #0
+    sta oam + 104 + 1
+    sta oam + 108 + 1
+    sta oam + 112 + 1
+    sta oam + 116 + 1
+    sta oam + 120 + 1
+    sta oam + 124 + 1
+
+    lda #255
+    clc 
+    adc #1
+    sta oam + 104 + 3
+    sta oam + 108 + 3
+    sta oam + 112 + 3
+    sta oam + 116 + 3
+    sta oam + 120 + 3
+    sta oam + 124 + 3
+    rts
+.endproc
 ;**************************************************************
 ; Ducking code and sprite change
 ;**************************************************************
