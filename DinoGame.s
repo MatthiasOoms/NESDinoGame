@@ -73,9 +73,13 @@ p2_duck: .res 1
 obstacle1_x: .res 1
 obstacle2_x: .res 1
 
+; cacti tile
+cacti_tile_nr: .res 1
+
 ; Obstacle active
 obstacle1_active: .res 1
 obstacle2_active: .res 1
+obstacles_deactivate: .res 1
 
 ; Obstacle active
 obstacle1_has_changed: .res 1
@@ -88,6 +92,9 @@ obstacle3_type: .res 1
 
 ; Obstacle scroll speed
 obstacle_scroll: .res 1
+
+; temporary value
+temp: .res 1
 
 
 ;*****************************************************************
@@ -1143,6 +1150,7 @@ rts
 
     lda #1
     sta obstacle1_active
+    sta obstacles_deactivate
     lda #0
     sta obstacle2_active
 
@@ -1150,12 +1158,15 @@ rts
     sta obstacle1_has_changed
     sta obstacle2_has_changed
 
+    lda #84
+    sta cacti_tile_nr
+
     ; OBSTACLE TYPE
-    lda #%00000000
+    lda #%11
     sta obstacle1_type
-    lda #%00000010
+    lda #%01
     sta obstacle2_type
-    lda #%00000011
+    lda #%10
     sta obstacle3_type
 
     ; OBSTACLE SCROLL SPEED
@@ -1556,35 +1567,20 @@ MOVE_UP:
     sec
     sbc jmp_speed
     sta oam + 40
-    jmp CONTINUE
+    jmp CONTINUE   
 
 CONTINUE:
+    ; if deactivated
     ; create random number
-    ;jsr rand
-    ;sta temp
-    ;and obstacle1_type
-    ;beq SETOBSTACLECACTI
-    ;lda temp
-    ;and obstacle2_type
-    ;beq SETOBSTACLEDOUBLECACTI
-    ;lda temp
-    ;and obstacle3_type
-    ;beq SETOBSTACLESPRITEBIRD
+    ; active appropriate obstacles
+    lda obstacles_deactivate
+    cmp #1
+    beq ACTIVATERANDOMOBSTACLE
 
     ;jsr check_sprite_number_obstacle1
-    ; Calculate next object x pos
-    lda obstacle1_x
-    sec 
-    sbc obstacle_scroll
-    sta obstacle1_x
-
-    lda obstacle2_x
-    sec
-    sbc obstacle_scroll
-    sta obstacle2_x
-
+    
     ; Obstacle x pos
-    jsr set_birdsprite_obstacle2
+    jsr calculate_obstacle_x
     jsr move_obstacle
     jsr if_sprite_change_needed
 
@@ -1650,6 +1646,10 @@ NOT_COLLIDED:
 
     jmp mainloop
 
+ACTIVATERANDOMOBSTACLE:
+    jsr check_enemy_type
+    jmp CONTINUE
+
 
 .endproc
 
@@ -1657,35 +1657,111 @@ NOT_COLLIDED:
 ; Obstacle Movement / sprite change
 ;**************************************************************
 .segment "CODE"
-.proc if_sprite_change_needed
-    lda obstacle1_has_changed
-    cmp #0
-    bne SETACTIVE
+.proc check_enemy_type
+    jsr rand
+    ldy temp
+    and #%10
+    beq SETOBSTACLESPRITEBIRD
+    jsr player_duck
+    jsr rand
+    ldy temp
+    and #%01
+    beq SETOBSTACLEDOUBLECACTI
+    
+    jsr set_obstacle1_active
+    lda #0
+    sta obstacles_deactivate
+    rts
 
+SETOBSTACLEDOUBLECACTI:
+    jsr set_obstacle1_active
+    jsr set_cactisprite_obstacle2
+    lda #0
+    sta obstacles_deactivate
+    rts
+
+SETOBSTACLESPRITEBIRD:
+    jsr set_birdsprite_obstacle2
+    lda #0
+    sta obstacles_deactivate
+    rts
+.endproc 
+
+.segment "CODE"
+.proc if_sprite_change_needed
     lda obstacle1_active
     cmp #1
-    bne RETURN
+    beq CHECKOBSTACLE1
 
+    lda obstacle2_active
+    cmp #1
+    beq CHECKOBSTACLE2
+
+CHECKOBSTACLE1:
     lda obstacle1_x
     cmp #8
     bcs RETURN
-    jsr check_sprite_number_obstacle1
+    jsr set_obstacles_not_active
+
+    lda obstacle2_active
+    cmp #1
+    beq CHECKOBSTACLE2
+
     rts
-SETACTIVE:
-    lda obstacle1_x
+
+CHECKOBSTACLE2:
+    lda obstacle2_x
     cmp #8
-    bcc RETURN
-    lda #1
-    sta obstacle1_active
-    lda #0
-    sta obstacle1_has_changed
-    jmp if_sprite_change_needed
+    bcs RETURN
+    jsr set_obstacles_not_active
+    rts
 
 RETURN:  
     rts
 .endproc
 .segment "CODE"
+.proc calculate_obstacle_x
+    ; Calculate next object x pos
+    lda obstacle1_active
+    cmp #1
+    beq CALCXOBSTACLE1
+
+    lda obstacle2_active
+    cmp #1
+    beq CALCXOBSTACLE2
+
+    rts
+CALCXOBSTACLE1:
+    lda obstacle1_x
+    sec 
+    sbc obstacle_scroll
+    sta obstacle1_x
+
+    lda obstacle2_active
+    cmp #1
+    beq CALCXOBSTACLE2
+
+    rts
+CALCXOBSTACLE2:
+    lda obstacle2_x
+    sec
+    sbc obstacle_scroll
+    sta obstacle2_x
+    rts
+.endproc
+.segment "CODE"
 .proc move_obstacle
+
+    lda obstacle1_active
+    cmp #1
+    beq MOVEOBSTACLE1
+
+    lda obstacle2_active
+    cmp #1
+    beq MOVEOBSTACLE2
+    rts
+
+MOVEOBSTACLE1:
     ; Obstacle 1 x pos
     lda obstacle1_x
     sta oam + 88 + 3
@@ -1696,6 +1772,11 @@ RETURN:
     sta oam + 92 + 3
     sta oam + 100 + 3
 
+    lda obstacle2_active
+    cmp #1
+    beq MOVEOBSTACLE2
+    rts
+MOVEOBSTACLE2:
     ; setup obstacle 2 x
     lda obstacle2_x
     sta oam + 104 + 3
@@ -1710,35 +1791,24 @@ RETURN:
     clc
     adc #16
     sta oam + 120 + 3
-    
     rts
 .endproc 
-.segment "CODE"
-.proc check_sprite_number_obstacle1
-    lda oam + 88 + 1
-    clc
-    adc #3
-    cmp #95
-    beq RESETSPRITE
-        lda oam + 88 + 1
-        clc
-        adc #3
-        jsr set_sprite_obstacle1
-        rts
 
-RESETSPRITE:
-    lda #83
-    jsr set_sprite_obstacle1
+.segment "CODE"
+.proc set_obstacle1_active
+    lda #1
+    sta obstacle1_active
+    jsr check_sprite_number_obstacle1
     rts
 .endproc
 .segment "CODE"
-.proc check_sprite_number_obstacle2
-    lda oam + 104 + 1
+.proc check_sprite_number_obstacle1
+    lda cacti_tile_nr
     clc
     adc #3
     cmp #95
     beq RESETSPRITE
-        lda oam + 88 + 1
+        lda cacti_tile_nr
         clc
         adc #3
         jsr set_sprite_obstacle1
@@ -1754,6 +1824,7 @@ RESETSPRITE:
 .proc set_sprite_obstacle1
     clc
     adc #1
+    sta cacti_tile_nr
     sta oam + 88 + 1
     adc #1
     sta oam + 92 + 1
@@ -1761,16 +1832,14 @@ RESETSPRITE:
     sta oam + 96 + 1
     adc #1
     sta oam + 100 + 1
-
-    lda #0
-    sta obstacle1_active
-    lda #1
-    sta obstacle1_has_changed
     rts
 .endproc
 
 .segment "CODE"
 .proc set_birdsprite_obstacle2
+    lda #1
+    sta obstacle2_active
+
     lda #122
     sta oam + 104 + 1
     lda #123
@@ -1783,6 +1852,10 @@ RESETSPRITE:
     sta oam + 120 + 1
     lda #127
     sta oam + 124 + 1
+
+    lda #%0
+    sta oam + 108 + 2
+    sta oam + 116 + 2
   
     ; setup obstacle 2 y
     jsr set_birdsprite_height
@@ -1804,43 +1877,59 @@ RESETSPRITE:
 .endproc
 
 .segment "CODE"
-.proc set_rand_cactisprite_obstacle2
-    clc
-    adc #1
+.proc set_cactisprite_obstacle2
+    lda #1
+    sta obstacle2_active
+
+    lda #88
     sta oam + 104 + 1
-    adc #1
+    lda #89
     sta oam + 108 + 1
-    adc #1
+    lda #90
     sta oam + 112 + 1
-    adc #1
+    lda #91
     sta oam + 116 + 1
 
     lda #0
     sta oam + 120 + 1
     sta oam + 124 + 1
 
-    lda #0
-    sta obstacle2_active
-    lda #1
-    sta obstacle2_has_changed
+    lda #255
+    clc 
+    adc #16
+    sta obstacle2_x
+    sta oam + 104 + 3
+    sta oam + 112 + 3
+    lda #255
+    clc 
+    adc #24
+    sta oam + 108 + 3
+    sta oam + 116 + 3
+
+    lda #%01000000
+    sta oam + 108 + 2
+    sta oam + 116 + 2
+
+    lda #255
+    sta oam + 120 + 3
+    sta oam + 124 + 3
+
+    lda p1_min_y
+    clc
+    sbc #7
+    sta oam + 104
+    sta oam + 108
+    lda p1_min_y
+    sta oam + 112
+    sta oam + 116
+
     rts
 .endproc
 .segment "CODE"
 .proc set_obstacles_not_active
-    ; set obstacle 1 hidden
-    lda #0
-    sta oam + 88 + 1
-    sta oam + 92 + 1
-    sta oam + 96 + 1
-    sta oam + 100 + 1
-    
-    lda #255
-    clc 
-    adc #1
-    sta oam + 88 + 3
-    sta oam + 96 + 3
-    sta oam + 92 + 3
-    sta oam + 100 + 3
+    lda obstacle1_active
+    cmp #1
+    beq SETOBSTACLE1DEACTIVE
 
     ; set obstacle 2 hidden
     lda #0
@@ -1854,12 +1943,41 @@ RESETSPRITE:
     lda #255
     clc 
     adc #1
+    sta obstacle2_x
     sta oam + 104 + 3
     sta oam + 108 + 3
     sta oam + 112 + 3
     sta oam + 116 + 3
     sta oam + 120 + 3
     sta oam + 124 + 3
+
+    lda #1
+    sta obstacles_deactivate
+    lda #0
+    sta obstacle2_active
+    rts
+SETOBSTACLE1DEACTIVE:
+    ; set obstacle 1 hidden
+    lda #0
+    sta oam + 88 + 1
+    sta oam + 92 + 1
+    sta oam + 96 + 1
+    sta oam + 100 + 1
+    
+    lda #255
+    clc 
+    adc #1
+    sta obstacle1_x
+    sta oam + 88 + 3
+    sta oam + 96 + 3
+    sta oam + 92 + 3
+    sta oam + 100 + 3
+
+    lda #0
+    sta obstacle1_active
+    rts
+
+RETURN:
     rts
 .endproc
 ;**************************************************************
