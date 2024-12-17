@@ -92,6 +92,9 @@ obstacle_scroll: .res 1
 ; temporary value
 temp: .res 1
 
+; to check for 2nd obstacles
+is_player_dead: .res 1
+
 
 ;*****************************************************************
 ; Sprite OAM Data area - copied to VRAM in NMI routine
@@ -1383,9 +1386,9 @@ rti
     sta obstacle2_x
 
     lda #1
-    sta obstacle1_active
     sta obstacles_deactivate
     lda #0
+    sta obstacle1_active
     sta obstacle2_active
 
     lda #0
@@ -1776,6 +1779,9 @@ rti
     ; Set sprite x
     lda #72
     sta oam + 40 + 3
+
+    lda #0
+    sta is_player_dead
     ;P1__________________________________________________________
 
 ; highscore__________________________________________________________
@@ -1908,21 +1914,193 @@ rti
     lda #255
     sta obstacle1_x
     sta obstacle2_x
-    sta obstacle3_x
-    
+
+    lda #1
+    sta obstacles_deactivate
+    lda #0
+    sta obstacle1_active
+    sta obstacle2_active
+
+    lda #0
+    sta obstacle1_has_changed
+    sta obstacle2_has_changed
+
+    lda #84
+    sta cacti_tile_nr
+
+    ; OBSTACLE TYPE
+    lda #%11
+    sta obstacle1_type
+    lda #%01
+    sta obstacle2_type
+    lda #%10
+    sta obstacle3_type
+
+    ; OBSTACLE SCROLL SPEED
+    lda #2
+    sta obstacle_scroll
+
+    ; p1_min_y - 16 = low bird flying height
+    ; p1_min_y - 32 = middle bird flying height
+    ; p1_min_y - 48 = top bird flying height
+
+; Obstacle 1 88-100
+    ; left top
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sec
+    sbc #8
+    sta oam + 88
+    ; Set sprite tile
+    lda #84
+    sta oam + 88 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 88 + 2
     ; Obstacle x pos
     lda obstacle1_x
     sta oam + 88 + 3
 
-   
+    ; right top
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sec
+    sbc #8
+    sta oam + 92
+    ; Set sprite tile
+    lda #85
+    sta oam + 92 + 1
+    ; Set sprite attributes
+    lda #%01000000
+    sta oam + 92 + 2
     ; Obstacle x pos
-    lda obstacle2_x
+    lda obstacle1_x
     sta oam + 92 + 3
 
+    ; left bottom
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sta oam + 96
+    ; Set sprite tile
+    lda #86
+    sta oam + 96 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 96 + 2
     ; Obstacle x pos
-    lda obstacle3_x
+    lda obstacle1_x
     sta oam + 96 + 3
 
+    ; right bottom
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    sta oam + 100
+    ; Set sprite tile
+    lda #87
+    sta oam + 100 + 1
+    ; Set sprite attributes
+    lda #%01000000
+    sta oam + 100 + 2
+    ; Obstacle x pos
+    lda obstacle1_x
+    sta oam + 100 + 3 
+
+; Obstacle 2 104 - 124 (bird or second cacti)
+    ; left top
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    clc
+    sbc #48
+    sta oam + 104
+    ; Set sprite tile
+    lda #0
+    sta oam + 104 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 104 + 2
+    ; Obstacle x pos
+    lda obstacle2_x
+    sta oam + 104 + 3
+
+    ; right top
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    clc
+    sbc #48
+    sta oam + 108
+    ; Set sprite tile
+    lda #0
+    sta oam + 108 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 108 + 2
+    ; Obstacle x pos
+    lda obstacle2_x
+    sta oam + 108 + 3
+
+    ; left bottom
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    clc
+    sbc #40
+    sta oam + 112
+    ; Set sprite tile
+    lda #0
+    sta oam + 112 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 112 + 2
+    ; Obstacle x pos
+    lda obstacle2_x
+    sta oam + 112 + 3
+
+    ; right bottom
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    clc
+    sbc #40
+    sta oam + 116
+    ; Set sprite tile
+    lda #0
+    sta oam + 116 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 116 + 2
+    ; Obstacle x pos
+    lda obstacle2_x + 8
+    sta oam + 116 + 3
+
+    ; optional tail
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    clc
+    sbc #40
+    sta oam + 120
+    ; Set sprite tile
+    lda #0
+    sta oam + 120 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 120 + 2
+    ; Obstacle x pos
+    lda obstacle2_x
+    sta oam + 120 + 3
+
+    ; down wing
+    ; Obstacle y pos on ground
+    lda p1_min_y
+    clc
+    sbc #32
+    sta oam + 124
+    ; Set sprite tile
+    lda #0
+    sta oam + 124 + 1
+    ; Set sprite attributes
+    lda #0
+    sta oam + 124 + 2
+    ; Obstacle x pos
+    lda obstacle2_x
+    sta oam + 124 + 3
     ; misc__________________________________________________________
 
 
@@ -2163,6 +2341,10 @@ MOVE_UP:
     sta oam + 40
     jmp CONTINUE   
 
+ACTIVATERANDOMOBSTACLE:
+    jsr check_enemy_type
+    jmp CONTINUE
+
 CONTINUE:
     ; if deactivated
     ; create random number
@@ -2232,6 +2414,12 @@ COLLIDED:
     jmp playerdied
 
 NOT_COLLIDED:
+    jsr check_2nd_obstacle_collision
+
+    lda is_player_dead
+    cmp #1
+    beq playerdied
+
     ; Animation update
     lda global_clock
     and #8
@@ -2336,16 +2524,73 @@ gameoverloop:
     jmp mainloop
 
 
-ACTIVATERANDOMOBSTACLE:
-    jsr check_enemy_type
-    jmp CONTINUE
-
-
 .endproc
 
 ;**************************************************************
 ; Obstacle Movement / sprite change
 ;**************************************************************
+.segment "CODE"
+.proc check_2nd_obstacle_collision
+     ; If player1 x pos is smaller than obstacle x pos + width
+    lda obstacle2_x
+    clc
+    adc #16 ; Width of 2 sprites
+    bcc :+
+    ; If carry is set, the obstacle is too close to the right side of the screen, we just use its x pos
+    lda obstacle2_x
+:   ; If carry is not set, the obstacle is not too close to the right side of the screen, we use its x pos + width
+    cmp oam + 3
+    bcc NOT_COLLIDED
+
+    ; If obstacle x pos is smaller than player1 x pos + width
+    lda p1_duck
+    cmp #0
+    beq :+
+    ; Ducking
+    lda oam + 3
+    clc
+    adc #32
+    jmp :++
+: ; Not ducking
+    lda oam + 3
+    clc
+    adc #24
+: ; Resume
+    cmp obstacle2_x
+    bcc NOT_COLLIDED
+
+    ; If player1 y pos is bigger than obstacle y pos + height
+    lda oam + 104
+    sec
+    sbc #16 ; 2 sprite height
+    cmp oam
+    bcs NOT_COLLIDED
+
+    ; If player1 y pos + height is bigger than obstacle y pos
+    lda p1_duck
+    cmp #0
+    beq :+
+    ; Ducking
+    lda oam
+    sec
+    sbc #16 ; height while ducking
+    jmp :++
+: ; Not ducking
+    lda oam
+    sec
+    sbc #24 ; height while standing
+: ; Resume
+    cmp oam + 104
+    bcs NOT_COLLIDED
+
+    lda #1
+    sta is_player_dead
+    rts
+
+NOT_COLLIDED:
+    rts
+.endproc
+
 .segment "CODE"
 .proc check_enemy_type
     jsr rand
@@ -2471,12 +2716,14 @@ MOVEOBSTACLE2:
     lda obstacle2_x
     sta oam + 104 + 3
     sta oam + 112 + 3
+
     lda obstacle2_x
     clc
     adc #8
     sta oam + 108 + 3
     sta oam + 116 + 3
     sta oam + 124 + 3
+    
     lda obstacle2_x
     clc
     adc #16
@@ -2554,14 +2801,14 @@ RESETSPRITE:
 
 .segment "CODE"
 .proc set_birdsprite_height
-    lda #32
+    lda #80
     sta oam + 104
     sta oam + 108
-    lda #40
+    lda #88
     sta oam + 112
     sta oam + 116
     sta oam + 120
-    lda #48
+    lda #96
     sta oam + 124
     rts
 .endproc
