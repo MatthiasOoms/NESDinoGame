@@ -2094,9 +2094,6 @@ COLLIDED:
     jmp playerdied
 
 NOT_COLLIDED:
-    ; Clock incremented
-    inc global_clock
-
     ; Animation update
     lda global_clock
     and #8
@@ -2148,7 +2145,11 @@ NOT_COLLIDED:
     sta oam + 4 + 1
 
 :   ; Done
+
+    ; Clock incremented
+    inc global_clock
     ; If clock is smaller than 245
+    ldx global_clock
     cpx #245
     bcc :+
     ; If clock is bigger than 245, increment global_speed
@@ -2156,8 +2157,8 @@ NOT_COLLIDED:
     ; Reset clock
     lda #0
     sta global_clock
-    stx global_clock_big
-    cpx #10
+    ldx global_clock_big
+    cpx #3
     bcc :+
     inc global_speed
 :
