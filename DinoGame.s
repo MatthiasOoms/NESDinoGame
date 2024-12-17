@@ -2597,8 +2597,6 @@ NOT_COLLIDED:
     ldy temp
     and #%10
     beq SETOBSTACLESPRITEBIRD
-    jsr player_duck
-    jsr rand
     ldy temp
     and #%01
     beq SETOBSTACLEDOUBLECACTI
