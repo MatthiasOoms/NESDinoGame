@@ -467,7 +467,7 @@ rti
                  jmp writedirt
 
                  dirt2:
-                 ldx #87
+                 ldx #77
                  jmp writedirt
 
                  dirt3:
