@@ -2170,8 +2170,6 @@ CONTINUE:
     lda obstacles_deactivate
     cmp #1
     beq ACTIVATERANDOMOBSTACLE
-
-    ;jsr check_sprite_number_obstacle1
     
     ; Obstacle x pos
     jsr calculate_obstacle_x
@@ -2231,14 +2229,112 @@ CONTINUE:
     bcs NOT_COLLIDED
 
 COLLIDED:
-    lda #0
-    sta oam + 3
+    jmp playerdied
 
 NOT_COLLIDED:
+    ; Animation update
+    lda global_clock
+    and #8
+    bne :++
+
+    ; Yes 8
+    lda p1_duck
+    cmp #1
+    bne :+
+
+    ; Ducking
+    ; Change left foot tile
+    lda #114
+    sta oam + 1
+    ; Change right foot tile
+    lda #115
+    sta oam + 4 + 1
+    jmp :++++
+
+:   ; Not ducking
+    ; Change left foot tile
+    lda #104
+    sta oam + 1
+    ; Change right foot tile
+    lda #107
+    sta oam + 4 + 1
+    jmp :+++
+
+:   ; Not 8
+    lda p1_duck
+    cmp #1
+    bne :+
+
+    ; Ducking
+    ; Change left foot tile
+    lda #120
+    sta oam + 1
+    ; Change right foot tile
+    lda #121
+    sta oam + 4 + 1
+    jmp :++
+
+:   ; Not ducking
+    ; Change left foot tile
+    lda #108
+    sta oam + 1
+    ; Change right foot tile
+    lda #109
+    sta oam + 4 + 1
+
+:   ; Done
+
+    ; Clock incremented
+    inc global_clock
+    ; If clock is smaller than 245
+    ldx global_clock
+    cpx #245
+    bcc :+
+    ; If clock is bigger than 245, increment global_speed
+    inc global_clock_big
+    ; Reset clock
+    lda #0
+    sta global_clock
+    ldx global_clock_big
+    cpx #3
+    bcc :+
+    inc global_speed
+:
+
+    lda #1
+    sta nmi_ready
+    jmp mainloop
+
+
+playerdied:
+
+    jsr record_new_highscore
+    jsr display_gameover_screen
+    jsr horizontal_scrollling
+
+    lda #1
+    sta nmi_ready
+
+
+gameoverloop:
+    lda nmi_ready
+    cmp #0
+    jsr gamepad_poll
+    lda gamepad
+    and #PAD_A|PAD_B|PAD_START|PAD_SELECT
+    beq gameoverloop
+
+    ;prepare game for playing 
+    jsr reset_game
+    jsr clear_gameover_texts
+    ;start scrolling
+    jsr horizontal_scrollling
+
     lda #1
     sta nmi_ready
 
     jmp mainloop
+
 
 ACTIVATERANDOMOBSTACLE:
     jsr check_enemy_type
