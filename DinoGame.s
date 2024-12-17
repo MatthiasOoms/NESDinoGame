@@ -1800,10 +1800,8 @@ paletteloop:
 
     jsr ppu_update
 
-    titleloop:
-jsr ppu_update
 
-jsr horizontal_scrollling
+    jsr horizontal_scrollling
 
 
 titleloop:
@@ -2190,8 +2188,6 @@ gameoverloop:
     jsr reset_game
     jsr clear_gameover_texts
     ;start scrolling
-    lda #2
-    sta global_speed
     jsr horizontal_scrollling
 
     lda #1
